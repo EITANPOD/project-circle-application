@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+itsdangerous
+passlib[bcrypt]
+sqlmodel
+psycopg2-binary
+# Optional: psycopg2-binary (for PostgreSQL)
+# sqlalchemy (included with sqlmodel)

@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+itsdangerous
+passlib
+sqlmodel
+# Simplified for Windows local development - no bcrypt or PostgreSQL

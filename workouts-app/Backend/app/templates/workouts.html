@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>My Workouts</title>
+  </head>
+  <body>
+    <h1>My Workouts</h1>
+    <form id="new">
+      <input name="title" placeholder="title" />
+      <input name="notes" placeholder="notes" />
+      <button>Add</button>
+    </form>
+    <ul id="list"></ul>
+    <script>
+      async function refresh() {
+        const res = await fetch('/api/workouts');
+        if (!res.ok) { if (res.status === 401) location.href = '/login'; return; }
+        const data = await res.json();
+        const ul = document.getElementById('list');
+        ul.innerHTML = '';
+        data.forEach(w => {
+          const li = document.createElement('li');
+          li.textContent = `${w.title} - ${w.notes || ''}`;
+          const del = document.createElement('button'); del.textContent = 'X'; del.onclick = async () => { await fetch(`/api/workouts/${w.id}`, { method: 'DELETE' }); refresh(); };
+          li.appendChild(del);
+          ul.appendChild(li);
+        });
+      }
+      document.getElementById('new').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(e.target).entries());
+        await fetch('/api/workouts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        e.target.reset();
+        refresh();
+      });
+      refresh();
+    </script>
+  </body>
+  </html>
+
+

@@ -1,0 +1,37 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Octopus body -->
+  <circle cx="60" cy="50" r="25" fill="#2ecc71" stroke="#27ae60" stroke-width="2"/>
+  
+  <!-- Eyes -->
+  <circle cx="55" cy="45" r="4" fill="white"/>
+  <circle cx="65" cy="45" r="4" fill="white"/>
+  <circle cx="55" cy="45" r="2" fill="black"/>
+  <circle cx="65" cy="45" r="2" fill="black"/>
+  
+  <!-- Tentacles -->
+  <path d="M 40 60 Q 30 80 35 95" stroke="#2ecc71" stroke-width="3" fill="none"/>
+  <path d="M 45 65 Q 35 85 40 100" stroke="#2ecc71" stroke-width="3" fill="none"/>
+  <path d="M 50 68 Q 40 88 45 103" stroke="#2ecc71" stroke-width="3" fill="none"/>
+  <path d="M 55 70 Q 45 90 50 105" stroke="#2ecc71" stroke-width="3" fill="none"/>
+  <path d="M 65 70 Q 75 90 70 105" stroke="#2ecc71" stroke-width="3" fill="none"/>
+  <path d="M 70 68 Q 80 88 75 103" stroke="#2ecc71" stroke-width="3" fill="none"/>
+  <path d="M 75 65 Q 85 85 80 100" stroke="#2ecc71" stroke-width="3" fill="none"/>
+  <path d="M 80 60 Q 90 80 85 95" stroke="#2ecc71" stroke-width="3" fill="none"/>
+  
+  <!-- Suckers on tentacles -->
+  <circle cx="35" cy="95" r="2" fill="#27ae60"/>
+  <circle cx="40" cy="100" r="2" fill="#27ae60"/>
+  <circle cx="45" cy="103" r="2" fill="#27ae60"/>
+  <circle cx="50" cy="105" r="2" fill="#27ae60"/>
+  <circle cx="70" cy="105" r="2" fill="#27ae60"/>
+  <circle cx="75" cy="103" r="2" fill="#27ae60"/>
+  <circle cx="80" cy="100" r="2" fill="#27ae60"/>
+  <circle cx="85" cy="95" r="2" fill="#27ae60"/>
+</svg>
+
+
+
+
+
+
+
