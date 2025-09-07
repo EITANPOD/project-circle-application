@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 type Workout = { 
   id: number; 
@@ -35,6 +36,7 @@ type ExerciseLog = {
 
 export function Workouts() {
   const nav = useNavigate()
+  const { user, isLoading: authLoading } = useAuth()
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null)
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([])
@@ -65,6 +67,13 @@ export function Workouts() {
     notes: '',
     exercise_logs: []
   })
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      nav('/login')
+    }
+  }, [user, authLoading, nav])
 
   async function loadWorkouts() {
     const base = (window as any).__API_BASE__ || ''
@@ -484,27 +493,36 @@ export function Workouts() {
                 />
               </div>
               <div className="exercise-inputs">
-                <input 
-                  className="form-input"
-                  type="number" 
-                  placeholder="Sets" 
-                  value={exerciseForm.sets} 
-                  onChange={e => setExerciseForm(prev => ({ ...prev, sets: parseInt(e.target.value) || 0 }))}
-                />
-                <input 
-                  className="form-input"
-                  type="number" 
-                  placeholder="Reps" 
-                  value={exerciseForm.reps} 
-                  onChange={e => setExerciseForm(prev => ({ ...prev, reps: parseInt(e.target.value) || 0 }))}
-                />
-                <input 
-                  className="form-input"
-                  type="number" 
-                  placeholder="Rest (sec)" 
-                  value={exerciseForm.rest_seconds} 
-                  onChange={e => setExerciseForm(prev => ({ ...prev, rest_seconds: parseInt(e.target.value) || 0 }))}
-                />
+                <div className="input-group">
+                  <label className="input-label">Sets</label>
+                  <input 
+                    className="form-input"
+                    type="number" 
+                    placeholder="3" 
+                    value={exerciseForm.sets} 
+                    onChange={e => setExerciseForm(prev => ({ ...prev, sets: parseInt(e.target.value) || 0 }))}
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Reps</label>
+                  <input 
+                    className="form-input"
+                    type="number" 
+                    placeholder="10" 
+                    value={exerciseForm.reps} 
+                    onChange={e => setExerciseForm(prev => ({ ...prev, reps: parseInt(e.target.value) || 0 }))}
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Rest (seconds)</label>
+                  <input 
+                    className="form-input"
+                    type="number" 
+                    placeholder="60" 
+                    value={exerciseForm.rest_seconds} 
+                    onChange={e => setExerciseForm(prev => ({ ...prev, rest_seconds: parseInt(e.target.value) || 0 }))}
+                  />
+                </div>
               </div>
               <div className="form-group">
                 <input 

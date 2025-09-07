@@ -1,7 +1,26 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 export function Home() {
+  const { user, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="home-page">
+        <div className="hero-section">
+          <div className="hero-content">
+            <div className="logo-container">
+              <img src="/octopus-logo.png" alt="Octopus Computer Solutions" className="hero-logo" />
+            </div>
+            <h1 className="hero-title">Welcome to Workouts</h1>
+            <p className="hero-subtitle">Loading...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="home-page">
       <div className="hero-section">
@@ -31,8 +50,19 @@ export function Home() {
             </div>
           </div>
           <div className="hero-actions">
-            <Link to="/signup" className="btn btn-primary">Get Started</Link>
-            <Link to="/login" className="btn btn-secondary">Sign In</Link>
+            {user ? (
+              <>
+                <Link to="/workouts" className="btn btn-primary">My Workouts</Link>
+                <p className="welcome-message">
+                  Welcome back, {user.full_name || user.email}! Ready to continue your fitness journey?
+                </p>
+              </>
+            ) : (
+              <>
+                <Link to="/signup" className="btn btn-primary">Get Started</Link>
+                <Link to="/login" className="btn btn-secondary">Sign In</Link>
+              </>
+            )}
           </div>
         </div>
       </div>

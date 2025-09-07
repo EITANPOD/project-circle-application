@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 export function Login() {
   const nav = useNavigate()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -19,6 +21,8 @@ export function Login() {
         body: JSON.stringify({ email, password })
       })
       if (res.ok) {
+        const userData = await res.json()
+        login(userData)
         nav('/workouts')
       } else {
         const text = await res.text()

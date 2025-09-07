@@ -52,7 +52,8 @@ body {
 
 .nav-links {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
+  align-items: center;
 }
 
 .nav-link {
@@ -65,8 +66,33 @@ body {
 }
 
 .nav-link:hover {
-  background: #667eea;
-  color: white;
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.user-info {
+  color: #667eea !important;
+  font-weight: 600;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+}
+
+.logout-btn {
+  background: #e74c3c;
+  color: white !important;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+  color: white !important;
 }
 
 /* Main content */
@@ -144,9 +170,19 @@ body {
 
 .hero-actions {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+.welcome-message {
+  color: #667eea;
+  font-weight: 500;
+  font-size: 1.1rem;
+  text-align: center;
+  margin-top: 0.5rem;
 }
 
 /* Buttons */
@@ -335,6 +371,19 @@ body {
   margin-bottom: 1rem;
 }
 
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
 .exercise-card {
   background: rgba(102, 126, 234, 0.05);
   border: 1px solid #e1e5e9;
@@ -421,6 +470,10 @@ body {
   
   .exercise-inputs {
     grid-template-columns: 1fr;
+  }
+  
+  .input-group {
+    margin-bottom: 1rem;
   }
   
   .log-inputs {
