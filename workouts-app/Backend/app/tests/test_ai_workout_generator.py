@@ -10,21 +10,21 @@ class TestAIWorkoutGenerator:
             user_request="I want a 30-minute upper body workout",
             workout_type="strength",
             duration_minutes=30,
-            difficulty="intermediate"
+            difficulty_level="intermediate"
         )
         
         assert request.user_request == "I want a 30-minute upper body workout"
         assert request.workout_type == "strength"
         assert request.duration_minutes == 30
-        assert request.difficulty == "intermediate"
+        assert request.difficulty_level == "intermediate"
     
     def test_ai_workout_request_defaults(self):
         """Test AIWorkoutRequest with default values"""
         request = AIWorkoutRequest(user_request="Test workout")
         
-        assert request.workout_type == "general"
+        assert request.workout_type is None
         assert request.duration_minutes == 45
-        assert request.difficulty == "beginner"
+        assert request.difficulty_level == "intermediate"
     
     @patch('app.ai_workout_generator.Groq')
     def test_ai_workout_generator_init(self, mock_groq):
@@ -49,21 +49,21 @@ class TestAIWorkoutGenerator:
             user_request="I want a 5-minute quick workout",
             workout_type="general",
             duration_minutes=5,
-            difficulty="beginner"
+            difficulty_level="beginner"
         )
         
         # This will make a real API call
         result = generator.generate_workout(request)
         
         assert result is not None
-        assert hasattr(result, 'workout_name')
+        assert hasattr(result, 'title')
         assert hasattr(result, 'exercises')
     
     @patch('app.ai_workout_generator.Groq')
     def test_ai_workout_generator_init_without_api_key(self, mock_groq):
         """Test AIWorkoutGenerator initialization without API key"""
         with patch.dict('os.environ', {'GROQ_API_KEY': ''}):
-            with pytest.raises(ValueError, match="GROQ_API_KEY is not set"):
+            with pytest.raises(ValueError, match="GROQ_API_KEY environment variable is not set"):
                 AIWorkoutGenerator()
     
     @patch('app.ai_workout_generator.Groq')
@@ -77,7 +77,7 @@ class TestAIWorkoutGenerator:
             user_request="I want a cardio workout",
             workout_type="cardio",
             duration_minutes=20,
-            difficulty="advanced"
+            difficulty_level="advanced"
         )
         
         prompt = generator._build_prompt(request)
