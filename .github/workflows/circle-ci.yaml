@@ -46,15 +46,17 @@ jobs:
         id: git-info
         run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - name: Determine ECR Registry
+      - name: Determine ECR Registry and API Base
         id: ecr-info
         run: |
           if [[ "${{ github.ref_name }}" == "prod" ]] || [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "ecr_repo=prod-circle-repo" >> $GITHUB_OUTPUT
             echo "ecr_registry=992382853618.dkr.ecr.us-east-1.amazonaws.com/prod-circle-repo" >> $GITHUB_OUTPUT
+            echo "api_base=https://app.eitanp.shop/api" >> $GITHUB_OUTPUT
           else
             echo "ecr_repo=dev-circle-repo" >> $GITHUB_OUTPUT
             echo "ecr_registry=992382853618.dkr.ecr.us-east-1.amazonaws.com/dev-circle-repo" >> $GITHUB_OUTPUT
+            echo "api_base=https://${{ github.ref_name }}-app.eitanp.shop/api" >> $GITHUB_OUTPUT
           fi
 
       - name: Build and Push Frontend Docker Image
@@ -64,7 +66,7 @@ jobs:
           file: ./workouts-app/Frontend/Dockerfile
           push: true
           build-args: |
-            VITE_API_BASE=https://backend.eitanp.shop
+            VITE_API_BASE=${{ steps.ecr-info.outputs.api_base }}
           tags: |
             ${{ steps.ecr-info.outputs.ecr_registry }}:frontend-${{ env.sha }}
 
