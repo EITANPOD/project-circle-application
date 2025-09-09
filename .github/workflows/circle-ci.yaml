@@ -32,12 +32,12 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
       - name: Log in to Amazon ECR
         run: |
           # Login to both dev and prod ECR registries
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin 992382853618.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 992382853618.dkr.ecr.us-east-1.amazonaws.com
 
       # Step 3: Build and Push Docker Images
       - name: Get the latest commit SHA
@@ -58,8 +58,8 @@ jobs:
       - name: Build and Push Frontend Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: ./Frontend
-          file: ./Frontend/Dockerfile
+          context: ./workouts-app/Frontend
+          file: ./workouts-app/Frontend/Dockerfile
           push: true
           build-args: |
             VITE_API_BASE=https://backend.eitanp.shop
@@ -69,8 +69,8 @@ jobs:
       - name: Build and Push Backend Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: ./Backend
-          file: ./Backend/Dockerfile
+          context: ./workouts-app/Backend
+          file: ./workouts-app/Backend/Dockerfile
           push: true
           tags: |
             ${{ steps.ecr-info.outputs.ecr_registry }}:backend-${{ env.sha }}
@@ -84,7 +84,7 @@ jobs:
       - name: Clone GitOps Repository
         run: |
           cd /home/runner/work/
-          git clone https://x-access-token:${{ secrets.GH_TOKEN }}@github.com:EITANPOD/project-circle-gitops.git
+          git clone https://${{ secrets.GH_TOKEN }}@github.com/EITANPOD/project-circle-gitops.git
           cd /home/runner/work/project-circle-gitops/environments/
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
