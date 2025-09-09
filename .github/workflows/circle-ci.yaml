@@ -75,7 +75,7 @@ jobs:
       - name: Run Frontend Tests
         run: |
           cd ./workouts-app/Frontend
-          npm run test || echo "Tests completed with warnings"
+          npm run test || echo "Frontend tests completed with warnings"
 
       - name: Build Frontend
         run: |
