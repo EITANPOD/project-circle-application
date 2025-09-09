@@ -50,7 +50,7 @@ jobs:
         run: |
           cd ./workouts-app/Backend
           pip install -r app/requirements.txt
-          pip install pytest pytest-asyncio httpx
+          pip install pytest pytest-asyncio httpx pytest-cov
 
       - name: Run Backend Linting
         run: |
