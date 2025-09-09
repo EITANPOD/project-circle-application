@@ -36,11 +36,11 @@ spec:
             secretKeyRef:
               name: my-db-secret
               key: ADMIN_TOKEN
-        - name: OPENAI_API_KEY
+        - name: GROQ_API_KEY
           valueFrom:
             secretKeyRef:
               name: my-db-secret
-              key: OPENAI_API_KEY
+              key: GROQ_API_KEY
         - name: DB_HOST
           valueFrom:
             configMapKeyRef:
