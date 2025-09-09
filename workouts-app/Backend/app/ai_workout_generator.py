@@ -88,7 +88,7 @@ class AIWorkoutGenerator:
         
         prompt_parts.extend([
             "",
-            "Please provide the workout in this exact JSON format:",
+            "IMPORTANT: You MUST respond with ONLY valid JSON in this exact format. Do not include any text before or after the JSON:",
             """{
   "title": "Workout Title",
   "description": "Brief description of the workout",
@@ -109,7 +109,12 @@ class AIWorkoutGenerator:
   ]
 }""",
             "",
-            "Make sure the workout is safe, effective, and matches the user's request. Include 4-8 exercises with proper progression."
+            "CRITICAL REQUIREMENTS:",
+            "1. Respond with ONLY the JSON object, no other text",
+            "2. Include 4-8 exercises based on the user's request",
+            "3. Make sure all JSON is valid and properly formatted",
+            "4. Each exercise must have name, sets, reps, rest_seconds, and notes",
+            "5. The workout must be safe, effective, and match the user's request"
         ])
         
         return "\n".join(prompt_parts)
@@ -118,15 +123,22 @@ class AIWorkoutGenerator:
         """Parse the AI response and convert to our data model"""
         
         try:
+            # Debug: Log the AI response
+            print(f"DEBUG: AI Response content: {ai_content[:500]}...")
+            
             # Extract JSON from the response (in case there's extra text)
             start_idx = ai_content.find('{')
             end_idx = ai_content.rfind('}') + 1
             
             if start_idx == -1 or end_idx == 0:
+                print("DEBUG: No JSON found in AI response")
                 raise ValueError("No valid JSON found in AI response")
             
             json_str = ai_content[start_idx:end_idx]
+            print(f"DEBUG: Extracted JSON: {json_str}")
+            
             data = json.loads(json_str)
+            print(f"DEBUG: Parsed data: {data}")
             
             # Convert exercises to our Exercise model
             exercises = []
@@ -150,6 +162,10 @@ class AIWorkoutGenerator:
             )
             
         except (json.JSONDecodeError, KeyError, ValueError) as e:
+            # Debug: Log the parsing error
+            print(f"DEBUG: Parsing failed with error: {e}")
+            print(f"DEBUG: AI Response that failed: {ai_content}")
+            
             # Fallback response if parsing fails
             return AIWorkoutResponse(
                 title="AI Generated Workout",
