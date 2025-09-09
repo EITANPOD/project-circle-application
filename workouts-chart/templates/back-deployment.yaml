@@ -52,18 +52,18 @@ spec:
               name: {{ .Values.backend.configmap.name }}
               key: DB_NAME
 
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.backend.service.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.backend.service.port }}
-          initialDelaySeconds: 60
-          periodSeconds: 30
+        # readinessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: {{ .Values.backend.service.port }}
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 10
+        # livenessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: {{ .Values.backend.service.port }}
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 30
         resources:
           limits:
             cpu: {{ .Values.backend.resources.limits.cpu }}
