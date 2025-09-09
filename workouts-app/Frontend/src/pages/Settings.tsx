@@ -62,6 +62,8 @@ export function Settings() {
       
       if (res.ok) {
         setMessage('Profile updated successfully!')
+        // Clear the message after 3 seconds
+        setTimeout(() => setMessage(''), 3000)
         // Refresh user data
         window.location.reload()
       } else {
@@ -101,6 +103,8 @@ export function Settings() {
       
       if (res.ok) {
         setMessage('Password updated successfully!')
+        // Clear the message after 3 seconds
+        setTimeout(() => setMessage(''), 3000)
         setPasswordForm({
           current_password: '',
           new_password: '',
@@ -134,6 +138,8 @@ export function Settings() {
       
       if (res.ok) {
         setMessage('Preferences updated successfully!')
+        // Clear the message after 3 seconds
+        setTimeout(() => setMessage(''), 3000)
       } else {
         const text = await res.text()
         setError(text || 'Failed to update preferences')

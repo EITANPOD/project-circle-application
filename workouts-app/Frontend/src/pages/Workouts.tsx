@@ -395,25 +395,31 @@ export function Workouts() {
       {/* Workouts List */}
       <div className="workouts-list">
         <h2>My Workouts</h2>
-        <form onSubmit={addWorkout} style={{ marginBottom: '20px' }}>
-          <div className="form-group">
-            <input 
-              className="form-input"
-              placeholder="Workout title" 
-              value={title} 
-              onChange={e => setTitle(e.target.value)}
-            />
-          </div>
-          <div className="form-group">
-            <input 
-              className="form-input"
-              placeholder="Notes (optional)" 
-              value={notes} 
-              onChange={e => setNotes(e.target.value)}
-            />
-          </div>
-          <button type="submit" className="form-button">Add Workout</button>
-        </form>
+        <div className="add-workout-section">
+          <h3 className="section-subtitle">🏋️ Create New Workout</h3>
+          <form onSubmit={addWorkout} className="add-workout-form">
+            <div className="form-group">
+              <input 
+                className="form-input"
+                placeholder="Workout title" 
+                value={title} 
+                onChange={e => setTitle(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input 
+                className="form-input"
+                placeholder="Notes (optional)" 
+                value={notes} 
+                onChange={e => setNotes(e.target.value)}
+              />
+            </div>
+            <button type="submit" className="form-button add-workout-btn">
+              <span>💪</span> Add Workout
+            </button>
+          </form>
+        </div>
         
         <div>
           {workouts.map(w => (
@@ -458,16 +464,16 @@ export function Workouts() {
           <h3>{selectedWorkout.title}</h3>
           {selectedWorkout.notes && <p>{selectedWorkout.notes}</p>}
           
-          <div style={{ marginBottom: '20px' }}>
+          <div className="workout-actions">
             <button 
-              className="btn btn-primary"
+              className="btn btn-primary action-btn"
               onClick={() => setShowExerciseForm(!showExerciseForm)}
-              style={{ marginRight: '10px' }}
             >
+              <span>{showExerciseForm ? '❌' : '➕'}</span>
               {showExerciseForm ? 'Cancel' : 'Add Exercise'}
             </button>
             <button 
-              className="btn btn-secondary"
+              className="btn btn-secondary action-btn"
               onClick={() => {
                 if (!showLoggingForm) {
                   initializeLoggingForm()
@@ -475,6 +481,7 @@ export function Workouts() {
                 setShowLoggingForm(!showLoggingForm)
               }}
             >
+              <span>{showLoggingForm ? '❌' : '📝'}</span>
               {showLoggingForm ? 'Cancel Logging' : 'Log Workout'}
             </button>
           </div>
@@ -536,7 +543,7 @@ export function Workouts() {
 
           {showLoggingForm && selectedWorkout.exercises && (
             <form onSubmit={logWorkout} className="logging-section">
-              <h4>Log Your Workout</h4>
+              <h4>📝 Log Your Workout</h4>
               <div className="form-group">
                 <input 
                   className="form-input"
@@ -549,46 +556,70 @@ export function Workouts() {
                 selectedWorkout.exercises.map(exercise => {
                   const exerciseLog = loggingForm.exercise_logs.find(log => log.exercise_id === exercise.id)
                   return (
-                    <div key={exercise.id} style={{ marginBottom: '15px', padding: '10px', border: '1px solid #2ecc71', borderRadius: '8px' }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '10px' }}>{exercise.name}</div>
+                    <div key={exercise.id} className="exercise-log-card">
+                      <div className="exercise-log-header">
+                        <h5 className="exercise-log-name">{exercise.name}</h5>
+                        <div className="exercise-log-target">
+                          Target: {exercise.sets} sets × {exercise.reps} reps
+                        </div>
+                      </div>
                       <div className="log-inputs">
-                        <input 
-                          className="log-input"
-                          type="number" 
-                          placeholder="Actual sets" 
-                          value={exerciseLog?.actual_sets || ''}
-                          onChange={e => updateLoggingForm(exercise.id, 'actual_sets', parseInt(e.target.value) || 0)}
-                        />
-                        <input 
-                          className="log-input"
-                          type="number" 
-                          placeholder="Actual reps" 
-                          value={exerciseLog?.actual_reps || ''}
-                          onChange={e => updateLoggingForm(exercise.id, 'actual_reps', parseInt(e.target.value) || 0)}
-                        />
-                        <input 
-                          className="log-input"
-                          type="number" 
-                          placeholder="Weight (kg)" 
-                          value={exerciseLog?.weight || ''}
-                          onChange={e => updateLoggingForm(exercise.id, 'weight', parseFloat(e.target.value) || undefined)}
-                        />
-                        <input 
-                          className="log-input"
-                          placeholder="Notes" 
-                          value={exerciseLog?.notes || ''}
-                          onChange={e => updateLoggingForm(exercise.id, 'notes', e.target.value)}
-                        />
+                        <div className="log-input-group">
+                          <label className="log-label">Sets Completed</label>
+                          <input 
+                            className="log-input"
+                            type="number" 
+                            placeholder="0" 
+                            value={exerciseLog?.actual_sets || ''}
+                            onChange={e => updateLoggingForm(exercise.id, 'actual_sets', parseInt(e.target.value) || 0)}
+                            min="0"
+                          />
+                        </div>
+                        <div className="log-input-group">
+                          <label className="log-label">Reps per Set</label>
+                          <input 
+                            className="log-input"
+                            type="number" 
+                            placeholder="0" 
+                            value={exerciseLog?.actual_reps || ''}
+                            onChange={e => updateLoggingForm(exercise.id, 'actual_reps', parseInt(e.target.value) || 0)}
+                            min="0"
+                          />
+                        </div>
+                        <div className="log-input-group">
+                          <label className="log-label">Weight (kg)</label>
+                          <input 
+                            className="log-input"
+                            type="number" 
+                            placeholder="0" 
+                            value={exerciseLog?.weight || ''}
+                            onChange={e => updateLoggingForm(exercise.id, 'weight', parseFloat(e.target.value) || undefined)}
+                            min="0"
+                            step="0.5"
+                          />
+                        </div>
+                        <div className="log-input-group">
+                          <label className="log-label">Notes</label>
+                          <input 
+                            className="log-input"
+                            placeholder="How did it feel?" 
+                            value={exerciseLog?.notes || ''}
+                            onChange={e => updateLoggingForm(exercise.id, 'notes', e.target.value)}
+                          />
+                        </div>
                       </div>
                     </div>
                   )
                 })
               ) : (
-                <div style={{ color: '#666', fontStyle: 'italic', textAlign: 'center', padding: '20px' }}>
-                  No exercises in this workout yet. Add exercises first!
+                <div className="no-exercises-message">
+                  <span className="no-exercises-icon">🏋️‍♂️</span>
+                  <p>No exercises in this workout yet. Add exercises first!</p>
                 </div>
               )}
-              <button type="submit" className="log-btn">Save Workout Log</button>
+              <button type="submit" className="log-btn">
+                <span>💾</span> Save Workout Log
+              </button>
             </form>
           )}
 

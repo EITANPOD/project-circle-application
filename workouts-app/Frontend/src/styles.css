@@ -595,6 +595,131 @@ body {
   margin: 0 auto;
 }
 
+/* Add Workout Section */
+.add-workout-section {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(236, 72, 153, 0.05));
+  border: 3px solid var(--primary);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  margin-bottom: var(--space-8);
+  position: relative;
+  overflow: hidden;
+}
+
+.add-workout-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-primary);
+}
+
+.section-subtitle {
+  color: var(--primary);
+  margin-bottom: var(--space-6);
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.025em;
+}
+
+.add-workout-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.add-workout-btn {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 800;
+  font-size: 1.125rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.add-workout-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.add-workout-btn:hover::before {
+  left: 100%;
+}
+
+.add-workout-btn:hover {
+  background: linear-gradient(135deg, #5a67d8, #667eea);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-2xl);
+}
+
+/* Workout Actions */
+.workout-actions {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-xl);
+  font-weight: 700;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.action-btn:hover::before {
+  left: 100%;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
 .workouts-list, .workout-details {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
@@ -875,6 +1000,106 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: var(--space-6);
   margin-bottom: var(--space-8);
+}
+
+/* Exercise Log Card */
+.exercise-log-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(6, 182, 212, 0.05));
+  border: 3px solid var(--success);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  margin-bottom: var(--space-6);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.exercise-log-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-success);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.exercise-log-card:hover {
+  border-color: var(--success);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+  background: white;
+}
+
+.exercise-log-card:hover::before {
+  transform: scaleX(1);
+}
+
+.exercise-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.exercise-log-name {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--success);
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.exercise-log-target {
+  color: var(--gray-600);
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: var(--gray-100);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  border-left: 4px solid var(--success);
+}
+
+.log-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.log-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin-bottom: var(--space-1);
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.no-exercises-message {
+  text-align: center;
+  padding: var(--space-12);
+  color: var(--gray-500);
+  font-style: italic;
+  background: var(--gray-50);
+  border-radius: var(--radius-xl);
+  border: 2px dashed var(--gray-300);
+}
+
+.no-exercises-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: var(--space-4);
+  opacity: 0.7;
+}
+
+.no-exercises-message p {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 .log-input {
@@ -1185,6 +1410,21 @@ body {
   
   .log-inputs {
     grid-template-columns: 1fr;
+  }
+  
+  .workout-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .action-btn {
+    justify-content: center;
+  }
+  
+  .exercise-log-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
   }
   
   .nav-links {

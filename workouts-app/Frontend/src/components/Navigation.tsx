@@ -27,7 +27,7 @@ export function Navigation() {
 
   return (
     <nav className="navbar">
-      <div className="nav-brand">
+      <div className="nav-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
         <img src="/octopus-logo.png" alt="Octopus" className="nav-logo" />
         <span className="nav-title">Workouts</span>
       </div>
