@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
     name: {{ .Values.backend.configmap.name }}
 data:
-    FRONTEND_ORIGIN: http://{{ .Values.frontend.ingress.hosts[0].host }}:8000
+    FRONTEND_ORIGIN: http://{{ index .Values.frontend.ingress.hosts 0 "host" }}:8000
     DB_HOST: {{ .Values.backend.configmap.env.DB_HOST }}
     DB_PORT: {{ .Values.backend.configmap.env.DB_PORT }}
     DB_NAME: {{ .Values.backend.configmap.env.DB_NAME }}
