@@ -4,7 +4,7 @@ metadata:
     name: {{ .Values.backend.configmap.name }}
     namespace: {{ .Values.global.destination.namespace }}
 data:
-    FRONTEND_ORIGIN: http://{{ index .Values.frontend.ingress.hosts 0 "host" }}:8000
-    DB_HOST: {{ .Values.backend.configmap.env.DB_HOST }}
-    DB_PORT: {{ .Values.backend.configmap.env.DB_PORT }}
-    DB_NAME: {{ .Values.backend.configmap.env.DB_NAME }}
+    FRONTEND_ORIGIN: "http://{{ index .Values.frontend.ingress.hosts 0 "host" }}:8000"
+    DB_HOST: "{{ .Values.backend.configmap.env.DB_HOST }}"
+    DB_PORT: "{{ .Values.backend.configmap.env.DB_PORT }}"
+    DB_NAME: "{{ .Values.backend.configmap.env.DB_NAME }}"
