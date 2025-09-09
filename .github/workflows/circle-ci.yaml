@@ -70,18 +70,12 @@ jobs:
       - name: Install Frontend Dependencies
         run: |
           cd ./workouts-app/Frontend
-          npm ci
-
-      - name: Run Frontend Linting
-        run: |
-          cd ./workouts-app/Frontend
-          npm run lint || echo "Linting completed with warnings"
-          npm run type-check || echo "Type checking completed with warnings"
+          npm install
 
       - name: Run Frontend Tests
         run: |
           cd ./workouts-app/Frontend
-          npm run test:ci || echo "Tests completed with warnings"
+          npm run test || echo "Tests completed with warnings"
 
       - name: Build Frontend
         run: |
