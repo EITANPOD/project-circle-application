@@ -448,9 +448,7 @@ export function Workouts() {
       {selectedWorkout && isLoading && (
         <div className="workout-details">
           <h3>{selectedWorkout.title}</h3>
-          <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-            Loading workout details...
-          </div>
+          <div className="loading">Loading workout details...</div>
         </div>
       )}
 

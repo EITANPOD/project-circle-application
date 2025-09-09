@@ -5,6 +5,7 @@ import { Login } from './pages/Login'
 import { Signup } from './pages/Signup'
 import { Workouts } from './pages/Workouts'
 import { Home } from './pages/Home'
+import { Settings } from './pages/Settings'
 import { AuthProvider } from './contexts/AuthContext'
 import { Navigation } from './components/Navigation'
 import './styles.css'
@@ -23,6 +24,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/workouts" element={<Workouts />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           </main>
         </div>

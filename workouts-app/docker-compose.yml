@@ -28,9 +28,13 @@ services:
       dockerfile: Dockerfile
     container_name: workouts-backend
     environment:
-      DATABASE_URL: postgresql://workouts_user:workouts_password@db:5432/workouts_db
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: workouts_db
+      DB_USER: workouts_user
+      DB_PASSWORD: workouts_password
       FRONTEND_ORIGIN: http://localhost:3000
-      ADMIN_TOKEN: changeme
+      ADMIN_TOKEN: tokentest123
     depends_on:
       db:
         condition: service_healthy

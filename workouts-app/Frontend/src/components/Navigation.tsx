@@ -19,7 +19,7 @@ export function Navigation() {
           <span className="nav-title">Workouts</span>
         </div>
         <div className="nav-links">
-          <span className="nav-link">Loading...</span>
+          <div className="loading">Loading...</div>
         </div>
       </nav>
     )
@@ -36,9 +36,9 @@ export function Navigation() {
         {user ? (
           <>
             <Link to="/workouts" className="nav-link">My Workouts</Link>
-            <span className="nav-link user-info">
+            <Link to="/settings" className="nav-link user-info">
               Welcome, {user.full_name || user.email}
-            </span>
+            </Link>
             <button onClick={handleLogout} className="nav-link logout-btn">
               Logout
             </button>
@@ -53,3 +53,5 @@ export function Navigation() {
     </nav>
   )
 }
+
+

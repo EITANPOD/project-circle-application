@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+      - staging
+      - prod
+
+jobs:
+#   test:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Test
+#         run: |
+#           cd ./workouts-app/Frontend
+#           npm run test
+
+
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        run: |
+          # Login to both dev and prod ECR registries
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin 992382853618.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      # Step 3: Build and Push Docker Images
+      - name: Get the latest commit SHA
+        id: git-info
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Determine ECR Registry
+        id: ecr-info
+        run: |
+          if [[ "${{ github.ref_name }}" == "prod" ]] || [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "ecr_repo=prod-circle-repo" >> $GITHUB_OUTPUT
+            echo "ecr_registry=992382853618.dkr.ecr.us-east-1.amazonaws.com/prod-circle-repo" >> $GITHUB_OUTPUT
+          else
+            echo "ecr_repo=dev-circle-repo" >> $GITHUB_OUTPUT
+            echo "ecr_registry=992382853618.dkr.ecr.us-east-1.amazonaws.com/dev-circle-repo" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and Push Frontend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Frontend
+          file: ./Frontend/Dockerfile
+          push: true
+          build-args: |
+            VITE_API_BASE=https://backend.eitanp.shop
+          tags: |
+            ${{ steps.ecr-info.outputs.ecr_registry }}:frontend-${{ env.sha }}
+
+      - name: Build and Push Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          file: ./Backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.ecr-info.outputs.ecr_registry }}:backend-${{ env.sha }}
+
+      - name: Login to GitHub
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      # Step 4: Clone GitOps Repository
+      - name: Clone GitOps Repository
+        run: |
+          cd /home/runner/work/
+          git clone https://x-access-token:${{ secrets.GH_TOKEN }}@github.com:EITANPOD/project-circle-gitops.git
+          cd /home/runner/work/project-circle-gitops/environments/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # Step 5: Update the Values File for the Correct Environment
+      - name: Update Values File
+        run: |
+          cd /home/runner/work/project-circle-gitops/environments/
+
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            env_dir="prod"
+            ecr_repo="prod-circle-repo"
+          elif [[ "${{ github.ref_name }}" == "staging" ]]; then
+            env_dir="staging"
+            ecr_repo="dev-circle-repo"
+          elif [[ "${{ github.ref_name }}" == "prod" ]]; then
+            env_dir="prod"
+            ecr_repo="prod-circle-repo"
+          elif [[ "${{ github.ref_name }}" == "dev" ]]; then
+            env_dir="dev"
+            ecr_repo="dev-circle-repo"
+          fi
+
+          # Get the RDS endpoint for the current environment
+          if [[ "$env_dir" == "dev" ]]; then
+            DB_HOST=$(aws rds describe-db-instances --query 'DBInstances[?DBInstanceIdentifier==`devworkoutsdb`].Endpoint.Address' --output text)
+          elif [[ "$env_dir" == "staging" ]]; then
+            DB_HOST=$(aws rds describe-db-instances --query 'DBInstances[?DBInstanceIdentifier==`devworkoutsdb`].Endpoint.Address' --output text)
+          elif [[ "$env_dir" == "prod" ]]; then
+            DB_HOST=$(aws rds describe-db-instances --query 'DBInstances[?DBInstanceIdentifier==`prodworkoutsdb`].Endpoint.Address' --output text)
+          fi
+
+          # Update ECR repository and image tags
+          sed -i "s|repository: 992382853618.dkr.ecr.us-east-1.amazonaws.com/.*-circle-repo|repository: 992382853618.dkr.ecr.us-east-1.amazonaws.com/$ecr_repo|" $env_dir/values.yaml
+          sed -i "s|tag: frontend-.*|tag: frontend-${{ env.sha }}|" $env_dir/values.yaml
+          sed -i "s|tag: backend-.*|tag: backend-${{ env.sha }}|" $env_dir/values.yaml
+          
+          # Update DB_HOST with the actual RDS endpoint
+          sed -i "s|DB_HOST: \".*\"|DB_HOST: \"$DB_HOST\"|" $env_dir/values.yaml
+
+      # Step 6: Commit and Push Changes to GitOps Repository
+      - name: Commit and Push Changes
+        run: |
+          cd /home/runner/work/project-circle-gitops/
+          git add .
+          git commit -m "Update image tags for ${{ github.ref_name }} to ${{ env.sha }} & DB_HOST Value"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

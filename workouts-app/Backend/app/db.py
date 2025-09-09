@@ -4,9 +4,22 @@ from sqlmodel import SQLModel, create_engine, Session
 
 
 def get_database_url() -> str:
+    # Check if individual DB environment variables are provided
+    db_host = os.getenv("DB_HOST")
+    db_port = os.getenv("DB_PORT")
+    db_name = os.getenv("DB_NAME")
+    db_user = os.getenv("DB_USER")
+    db_password = os.getenv("DB_PASSWORD")
+    
+    # If all required variables are present, construct PostgreSQL URL
+    if all([db_host, db_port, db_name, db_user, db_password]):
+        return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    
+    # Fallback to DATABASE_URL if provided
     env_url = os.getenv("DATABASE_URL")
     if env_url:
         return env_url
+    
     # Default to local sqlite for development
     data_dir = os.getenv("DATA_DIR", ".")
     os.makedirs(data_dir, exist_ok=True)

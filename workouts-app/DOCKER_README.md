@@ -38,7 +38,11 @@ This project is now containerized with three separate Docker containers:
 - **Dependencies**: Database service
 - **Health Check**: `/healthz` endpoint
 - **Environment Variables**:
-  - `DATABASE_URL`: PostgreSQL connection string
+  - `DB_HOST`: Database host (default: db)
+  - `DB_PORT`: Database port (default: 5432)
+  - `DB_NAME`: Database name (default: workouts_db)
+  - `DB_USER`: Database user (default: workouts_user)
+  - `DB_PASSWORD`: Database password (default: workouts_password)
   - `FRONTEND_ORIGIN`: Frontend URL for CORS
   - `ADMIN_TOKEN`: Admin authentication token
 
@@ -111,9 +115,14 @@ docker-compose run --service-ports frontend npm run dev
 Create a `.env` file in the root directory to override default values:
 
 ```env
-POSTGRES_DB=workouts_db
-POSTGRES_USER=workouts_user
-POSTGRES_PASSWORD=workouts_password
+# Database configuration
+DB_HOST=db
+DB_PORT=5432
+DB_NAME=workouts_db
+DB_USER=workouts_user
+DB_PASSWORD=workouts_password
+
+# Application configuration
 ADMIN_TOKEN=your_admin_token
 FRONTEND_ORIGIN=http://localhost:3000
 ```

@@ -14,7 +14,7 @@ export function Home() {
               <img src="/octopus-logo.png" alt="Octopus Computer Solutions" className="hero-logo" />
             </div>
             <h1 className="hero-title">Welcome to Workouts</h1>
-            <p className="hero-subtitle">Loading...</p>
+            <div className="loading">Loading your fitness journey...</div>
           </div>
         </div>
       </div>
@@ -34,19 +34,19 @@ export function Home() {
           </p>
           <div className="hero-features">
             <div className="feature">
-              <div className="feature-icon">💪</div>
+              <div className="feature-icon">🏋️‍♂️</div>
               <h3>Create Workouts</h3>
-              <p>Design your perfect training programs</p>
+              <p>Design your perfect training programs with our intuitive workout builder</p>
             </div>
             <div className="feature">
-              <div className="feature-icon">📊</div>
+              <div className="feature-icon">📈</div>
               <h3>Track Progress</h3>
-              <p>Log your actual performance</p>
+              <p>Log your actual performance and see your strength gains over time</p>
             </div>
             <div className="feature">
               <div className="feature-icon">🎯</div>
               <h3>Stay Motivated</h3>
-              <p>Monitor your fitness goals</p>
+              <p>Monitor your fitness goals and celebrate every achievement</p>
             </div>
           </div>
           <div className="hero-actions">
