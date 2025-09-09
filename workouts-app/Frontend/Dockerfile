@@ -11,7 +11,7 @@ ENV VITE_API_BASE=$VITE_API_BASE
 COPY package*.json ./
 
 # Install ALL dependencies (including dev dependencies needed for build)
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
