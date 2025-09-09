@@ -9,6 +9,7 @@ on:
       - prod
     paths:
       - 'workouts-app/**'
+      - '.github/**'
 
 jobs:
 #   test:
@@ -52,11 +53,11 @@ jobs:
           if [[ "${{ github.ref_name }}" == "prod" ]] || [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "ecr_repo=prod-circle-repo" >> $GITHUB_OUTPUT
             echo "ecr_registry=992382853618.dkr.ecr.us-east-1.amazonaws.com/prod-circle-repo" >> $GITHUB_OUTPUT
-            echo "api_base=https://app.eitanp.shop/api" >> $GITHUB_OUTPUT
+            echo "api_base=https://app.eitanp.shop" >> $GITHUB_OUTPUT
           else
             echo "ecr_repo=dev-circle-repo" >> $GITHUB_OUTPUT
             echo "ecr_registry=992382853618.dkr.ecr.us-east-1.amazonaws.com/dev-circle-repo" >> $GITHUB_OUTPUT
-            echo "api_base=https://${{ github.ref_name }}-app.eitanp.shop/api" >> $GITHUB_OUTPUT
+            echo "api_base=https://${{ github.ref_name }}-app.eitanp.shop" >> $GITHUB_OUTPUT
           fi
 
       - name: Build and Push Frontend Docker Image
