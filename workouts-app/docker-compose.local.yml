@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # Database service
+  db:
+    build:
+      context: ./DB
+      dockerfile: Dockerfile
+    container_name: workouts-db
+    environment:
+      POSTGRES_DB: workouts_db
+      POSTGRES_USER: workouts_user
+      POSTGRES_PASSWORD: workouts_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - workouts-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workouts_user -d workouts_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend service
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: workouts-backend
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: workouts_db
+      DB_USER: workouts_user
+      DB_PASSWORD: workouts_password
+      FRONTEND_ORIGIN: http://localhost:3000
+      ADMIN_TOKEN: tokentest123
+      GROQ_API_KEY: ${GROQ_API_KEY:-your-groq-api-key-here}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - workouts-network
+    ports:
+      - "8000:8000"
+    # Volumes removed for production - using built files in container
+
+  # Frontend service
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE=http://localhost:8000
+    container_name: workouts-frontend
+    depends_on:
+      - backend
+    networks:
+      - workouts-network
+    ports:
+      - "3000:3000"
+    # Volumes removed for production - using built files in container
+
+networks:
+  workouts-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
