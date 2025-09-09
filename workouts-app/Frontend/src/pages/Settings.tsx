@@ -285,7 +285,7 @@ export function Settings() {
 
         {/* Preferences */}
         <div className="settings-section">
-          <h2 className="section-title">⚙️ Preferences</h2>
+          <h2 className="section-title"><span className="emoji">⚙️</span>Preferences</h2>
           <form onSubmit={updatePreferences} className="settings-form">
             <div className="form-group">
               <label className="form-label">Theme</label>
@@ -337,7 +337,7 @@ export function Settings() {
 
         {/* Account Actions */}
         <div className="settings-section danger-section">
-          <h2 className="section-title">⚠️ Account Actions</h2>
+          <h2 className="section-title"><span className="emoji">⚠️</span>Account Actions</h2>
           <div className="danger-actions">
             <button 
               onClick={deleteAccount}

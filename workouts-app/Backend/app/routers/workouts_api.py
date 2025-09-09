@@ -1,11 +1,32 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from ..db import get_session
 from ..models import Workout, Exercise, WorkoutLog, ExerciseLog
 from ..auth import require_user
+from ..ai_workout_generator import AIWorkoutGenerator, AIWorkoutRequest
 
 
 router = APIRouter(prefix="/api/workouts", tags=["api:workouts"])
+
+
+# AI Test endpoint - MUST be before any routes with path parameters
+@router.get("/ai-test")
+def api_test_ai():
+    """Test AI configuration"""
+    try:
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            return {"status": "error", "message": "GROQ_API_KEY not set"}
+        if api_key == "your-groq-api-key-here":
+            return {"status": "error", "message": "GROQ_API_KEY is using placeholder value"}
+        
+        # Test Groq client initialization
+        from ..ai_workout_generator import AIWorkoutGenerator
+        generator = AIWorkoutGenerator()
+        return {"status": "success", "message": "AI configuration is working", "api_key_length": len(api_key)}
+    except Exception as e:
+        return {"status": "error", "message": f"AI test failed: {str(e)}"}
 
 
 @router.get("")
@@ -225,5 +246,72 @@ def api_get_workout_logs(wid: int, user=Depends(require_user), session=Depends(g
         response_logs.append(log_dict)
     
     return response_logs
+
+
+# AI Workout Generation endpoint
+@router.post("/ai-generate")
+def api_generate_ai_workout(request: AIWorkoutRequest, user=Depends(require_user)):
+    """Generate a workout using AI based on user request"""
+    try:
+        generator = AIWorkoutGenerator()
+        ai_workout = generator.generate_workout(request)
+        return ai_workout
+    except ValueError as e:
+        # API key not set or invalid
+        raise HTTPException(400, f"Configuration error: {str(e)}")
+    except Exception as e:
+        # Log the full error for debugging
+        print(f"AI Workout Generation Error: {str(e)}")
+        raise HTTPException(500, f"Failed to generate workout: {str(e)}")
+
+
+@router.post("/ai-generate-and-save")
+def api_generate_and_save_ai_workout(request: AIWorkoutRequest, user=Depends(require_user), session=Depends(get_session)):
+    """Generate a workout using AI and save it to the database"""
+    try:
+        generator = AIWorkoutGenerator()
+        ai_workout = generator.generate_workout(request)
+        
+        # Create the workout in the database
+        workout = Workout(
+            title=ai_workout.title,
+            notes=ai_workout.description,
+            owner_id=user.id
+        )
+        session.add(workout)
+        session.commit()
+        session.refresh(workout)
+        
+        # Add exercises to the workout
+        for exercise_data in ai_workout.exercises:
+            exercise = Exercise(
+                name=exercise_data.name,
+                sets=exercise_data.sets,
+                reps=exercise_data.reps,
+                rest_seconds=exercise_data.rest_seconds,
+                notes=exercise_data.notes,
+                workout_id=workout.id
+            )
+            session.add(exercise)
+        
+        session.commit()
+        
+        # Return the created workout with exercises
+        created_exercises = session.exec(
+            select(Exercise).where(Exercise.workout_id == workout.id).order_by(Exercise.created_at.asc())
+        ).all()
+        
+        workout.exercises = created_exercises
+        return {
+            "workout": workout,
+            "ai_metadata": {
+                "estimated_duration": ai_workout.estimated_duration,
+                "difficulty": ai_workout.difficulty,
+                "tips": ai_workout.tips
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(500, f"Failed to generate and save workout: {str(e)}")
 
 

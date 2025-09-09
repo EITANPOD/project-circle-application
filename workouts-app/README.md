@@ -76,7 +76,7 @@ docker-compose ps
 3. **Install dependencies:**
    ```cmd
    python -m pip install --upgrade pip
-   pip install -r app\requirements-local.txt
+   pip install -r app\requirements.txt
    ```
 
 4. **Start backend server:**
@@ -179,7 +179,7 @@ workouts-app/
 
 ### Local Development Issues
 - **Python errors**: Make sure virtual environment is activated
-- **bcrypt errors**: Use `requirements-local.txt` (no bcrypt required)
+- **bcrypt errors**: Install bcrypt separately if needed: `pip install bcrypt`
 - **Port 5173 in use**: Kill other Vite processes
 
 ### Common Solutions
@@ -193,7 +193,7 @@ cd Backend
 rmdir /s venv
 python -m venv venv
 venv\Scripts\activate
-pip install -r app\requirements-local.txt
+pip install -r app\requirements.txt
 ```
 
 ---

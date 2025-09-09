@@ -67,6 +67,19 @@ export function Workouts() {
     notes: '',
     exercise_logs: []
   })
+  
+  // AI Workout Generation states
+  const [showAIModal, setShowAIModal] = useState(false)
+  const [aiRequest, setAiRequest] = useState({
+    user_request: '',
+    workout_type: '',
+    duration_minutes: 45,
+    difficulty_level: 'intermediate',
+    equipment_available: [] as string[],
+    focus_areas: [] as string[]
+  })
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false)
+  const [aiGeneratedWorkout, setAiGeneratedWorkout] = useState<any>(null)
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -388,6 +401,79 @@ export function Workouts() {
     console.log('Initialized logging form with exercises:', initialExerciseLogs)
   }
 
+  async function generateAIWorkout() {
+    if (!aiRequest.user_request.trim()) {
+      alert('Please describe what kind of workout you want!')
+      return
+    }
+    
+    setIsGeneratingAI(true)
+    try {
+      const base = (window as any).__API_BASE__ || ''
+      const res = await fetch(`${base}/api/workouts/ai-generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(aiRequest)
+      })
+      
+      if (res.ok) {
+        const aiWorkout = await res.json()
+        setAiGeneratedWorkout(aiWorkout)
+        setShowAIModal(false)
+      } else {
+        console.error('Failed to generate AI workout:', res.status)
+        alert('Failed to generate workout. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error generating AI workout:', error)
+      alert('Error generating workout. Please try again.')
+    } finally {
+      setIsGeneratingAI(false)
+    }
+  }
+
+  async function saveAIWorkout() {
+    if (!aiRequest.user_request.trim()) {
+      alert('Please describe what kind of workout you want!')
+      return
+    }
+    
+    setIsGeneratingAI(true)
+    try {
+      const base = (window as any).__API_BASE__ || ''
+      const res = await fetch(`${base}/api/workouts/ai-generate-and-save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(aiRequest)
+      })
+      
+      if (res.ok) {
+        const result = await res.json()
+        setShowAIModal(false)
+        setAiRequest({
+          user_request: '',
+          workout_type: '',
+          duration_minutes: 45,
+          difficulty_level: 'intermediate',
+          equipment_available: [],
+          focus_areas: []
+        })
+        await loadWorkouts()
+        alert('AI workout created successfully!')
+      } else {
+        console.error('Failed to save AI workout:', res.status)
+        alert('Failed to create workout. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error saving AI workout:', error)
+      alert('Error creating workout. Please try again.')
+    } finally {
+      setIsGeneratingAI(false)
+    }
+  }
+
   useEffect(() => { loadWorkouts() }, [])
 
   return (
@@ -419,6 +505,15 @@ export function Workouts() {
               <span>💪</span> Add Workout
             </button>
           </form>
+          
+          <div className="ai-workout-section">
+            <button 
+              className="ai-generate-btn"
+              onClick={() => setShowAIModal(true)}
+            >
+              <span>🤖</span> Generate with AI
+            </button>
+          </div>
         </div>
         
         <div>
@@ -438,12 +533,22 @@ export function Workouts() {
                     </div>
                   )}
                 </div>
-                <button 
-                  className="delete-btn"
-                  onClick={(e) => { e.stopPropagation(); deleteWorkout(w.id) }}
-                >
-                  X
-                </button>
+                <div className="workout-actions">
+                  <button 
+                    className="view-details-btn"
+                    onClick={(e) => { e.stopPropagation(); nav(`/workouts/${w.id}`) }}
+                    title="View Details"
+                  >
+                    👁️
+                  </button>
+                  <button 
+                    className="delete-btn"
+                    onClick={(e) => { e.stopPropagation(); deleteWorkout(w.id) }}
+                    title="Delete Workout"
+                  >
+                    X
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -824,6 +929,177 @@ export function Workouts() {
                 No workout history yet. Log your first workout to see it here!
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* AI Workout Generation Modal */}
+      {showAIModal && (
+        <div className="ai-modal-overlay" onClick={() => setShowAIModal(false)}>
+          <div className="ai-modal" onClick={e => e.stopPropagation()}>
+            <div className="ai-modal-header">
+              <h3>🤖 AI Workout Generator</h3>
+              <button 
+                className="ai-modal-close"
+                onClick={() => setShowAIModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="ai-modal-content">
+              <div className="form-group">
+                <label className="form-label">Describe your ideal workout</label>
+                <textarea
+                  className="form-input ai-textarea"
+                  placeholder="e.g., 'I want a 30-minute upper body workout for beginners with no equipment'"
+                  value={aiRequest.user_request}
+                  onChange={e => setAiRequest(prev => ({ ...prev, user_request: e.target.value }))}
+                  rows={3}
+                />
+              </div>
+              
+              <div className="ai-options">
+                <div className="form-group">
+                  <label className="form-label">Workout Type (optional)</label>
+                  <select
+                    className="form-input"
+                    value={aiRequest.workout_type}
+                    onChange={e => setAiRequest(prev => ({ ...prev, workout_type: e.target.value }))}
+                  >
+                    <option value="">Any type</option>
+                    <option value="strength">Strength Training</option>
+                    <option value="cardio">Cardio</option>
+                    <option value="hiit">HIIT</option>
+                    <option value="yoga">Yoga</option>
+                    <option value="pilates">Pilates</option>
+                    <option value="flexibility">Flexibility</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label className="form-label">Duration (minutes)</label>
+                  <input
+                    className="form-input"
+                    type="number"
+                    min="10"
+                    max="120"
+                    value={aiRequest.duration_minutes}
+                    onChange={e => setAiRequest(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) || 45 }))}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label className="form-label">Difficulty Level</label>
+                  <select
+                    className="form-input"
+                    value={aiRequest.difficulty_level}
+                    onChange={e => setAiRequest(prev => ({ ...prev, difficulty_level: e.target.value }))}
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="ai-modal-actions">
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => setShowAIModal(false)}
+                  disabled={isGeneratingAI}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn btn-primary"
+                  onClick={generateAIWorkout}
+                  disabled={isGeneratingAI}
+                >
+                  {isGeneratingAI ? 'Generating...' : 'Preview Workout'}
+                </button>
+                <button 
+                  className="ai-save-btn"
+                  onClick={saveAIWorkout}
+                  disabled={isGeneratingAI}
+                >
+                  {isGeneratingAI ? 'Creating...' : 'Create & Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Generated Workout Preview */}
+      {aiGeneratedWorkout && (
+        <div className="ai-preview-overlay" onClick={() => setAiGeneratedWorkout(null)}>
+          <div className="ai-preview-modal" onClick={e => e.stopPropagation()}>
+            <div className="ai-preview-header">
+              <h3>🤖 AI Generated Workout</h3>
+              <button 
+                className="ai-modal-close"
+                onClick={() => setAiGeneratedWorkout(null)}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="ai-preview-content">
+              <div className="ai-workout-info">
+                <h4>{aiGeneratedWorkout.title}</h4>
+                <p>{aiGeneratedWorkout.description}</p>
+                <div className="ai-workout-meta">
+                  <span className="ai-meta-item">⏱️ {aiGeneratedWorkout.estimated_duration} minutes</span>
+                  <span className="ai-meta-item">💪 {aiGeneratedWorkout.difficulty}</span>
+                </div>
+              </div>
+              
+              <div className="ai-exercises">
+                <h5>Exercises:</h5>
+                {aiGeneratedWorkout.exercises.map((exercise: any, index: number) => (
+                  <div key={index} className="ai-exercise-card">
+                    <div className="ai-exercise-name">{exercise.name}</div>
+                    <div className="ai-exercise-details">
+                      {exercise.sets} sets × {exercise.reps} reps
+                      {exercise.rest_seconds > 0 && (
+                        <span> • Rest: {exercise.rest_seconds}s</span>
+                      )}
+                    </div>
+                    {exercise.notes && (
+                      <div className="ai-exercise-notes">{exercise.notes}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {aiGeneratedWorkout.tips && aiGeneratedWorkout.tips.length > 0 && (
+                <div className="ai-tips">
+                  <h5>💡 Tips:</h5>
+                  <ul>
+                    {aiGeneratedWorkout.tips.map((tip: string, index: number) => (
+                      <li key={index}>{tip}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <div className="ai-preview-actions">
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => setAiGeneratedWorkout(null)}
+                >
+                  Close
+                </button>
+                <button 
+                  className="ai-save-btn"
+                  onClick={saveAIWorkout}
+                  disabled={isGeneratingAI}
+                >
+                  {isGeneratingAI ? 'Creating...' : 'Save This Workout'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

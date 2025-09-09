@@ -48,6 +48,11 @@ export function Home() {
               <h3>Stay Motivated</h3>
               <p>Monitor your fitness goals and celebrate every achievement</p>
             </div>
+            <div className="feature">
+              <div className="feature-icon">🤖</div>
+              <h3>AI-Powered Planner</h3>
+              <p>Generate personalized workouts instantly with our intelligent AI trainer</p>
+            </div>
           </div>
           <div className="hero-actions">
             {user ? (
