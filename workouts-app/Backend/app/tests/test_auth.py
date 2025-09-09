@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
-from app.auth import create_access_token, verify_password, get_password_hash
+from app.auth import create_session_cookie, verify_password, hash_password
 
 client = TestClient(app)
 
@@ -9,16 +9,16 @@ class TestAuth:
     def test_password_hashing(self):
         """Test password hashing and verification"""
         password = "testpassword123"
-        hashed = get_password_hash(password)
+        hashed = hash_password(password)
         
         assert hashed != password
         assert verify_password(password, hashed)
         assert not verify_password("wrongpassword", hashed)
     
-    def test_create_access_token(self):
-        """Test JWT token creation"""
+    def test_create_session_cookie(self):
+        """Test session cookie creation"""
         user_id = 1
-        token = create_access_token(user_id)
+        token = create_session_cookie(user_id)
         
         assert isinstance(token, str)
         assert len(token) > 0

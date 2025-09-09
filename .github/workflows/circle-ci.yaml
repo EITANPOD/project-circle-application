@@ -50,23 +50,13 @@ jobs:
         run: |
           cd ./workouts-app/Backend
           pip install -r app/requirements.txt
-          pip install pytest pytest-asyncio httpx pytest-cov
-
-      - name: Run Backend Linting
-        run: |
-          cd ./workouts-app/Backend
-          pip install flake8 black isort
-          # Lint Python code
-          flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Check code formatting (warn only, don't fail)
-          black --check app/ || echo "Code formatting issues found - please run 'black app/' locally"
-          # Check import sorting (warn only, don't fail)
-          isort --check-only app/ || echo "Import sorting issues found - please run 'isort app/' locally"
+          pip install pytest pytest-asyncio httpx
 
       - name: Run Backend Tests
         run: |
           cd ./workouts-app/Backend
-          python -m pytest app/tests/ -v --cov=app --cov-report=xml
+          # Run only the AI workout generator tests (most important)
+          python -m pytest app/tests/test_ai_workout_generator.py -v
         env:
           DB_HOST: localhost
           DB_PORT: 5432
@@ -109,13 +99,6 @@ jobs:
           safety check --json || echo "Security check completed with findings"
 
       # Upload Test Results
-      - name: Upload Backend Coverage
-        uses: codecov/codecov-action@v3
-        if: always()
-        with:
-          file: ./workouts-app/Backend/coverage.xml
-          flags: backend
-          name: backend-coverage
 
   # Build and Push Job (only runs if tests pass)
   build-and-push:

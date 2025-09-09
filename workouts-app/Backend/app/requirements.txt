@@ -7,6 +7,5 @@ passlib[bcrypt]
 sqlmodel
 psycopg2-binary
 groq>=0.4.1
-pytest-cov
 # Optional: psycopg2-binary (for PostgreSQL)
 # sqlalchemy (included with sqlmodel)
