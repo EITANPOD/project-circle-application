@@ -92,8 +92,6 @@ jobs:
           pip install safety
           safety check --json || echo "Security check completed with findings"
 
-      # Upload Test Results
-
   # Build and Push Job (only runs if tests pass)
   build-and-push:
     needs: test
