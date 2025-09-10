@@ -13,7 +13,7 @@ spec:
       app: {{ .Values.backend.appname }}
   endpoints:
   - port: "{{ .Values.backend.service.port }}"
-    path: "{{ .Values.backend.monitoring.metricsPath | default \"/metrics\" }}"
+    path: "{{ .Values.backend.monitoring.metricsPath | default "/metrics" }}"
     interval: 30s
     scrapeTimeout: 10s
 {{- end }}
