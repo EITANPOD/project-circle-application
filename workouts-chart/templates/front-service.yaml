@@ -3,10 +3,19 @@ kind: Service
 metadata:
   name: {{ .Values.frontend.appname }}
   namespace: {{ .Values.global.destination.namespace }}
+  labels:
+    app: {{ .Values.frontend.appname }}
+    {{- include "workouts-chart.labels" . | nindent 4 }}
+  annotations:
+    prometheus.io/scrape: "{{ .Values.frontend.monitoring.enabled | default false }}"
+    prometheus.io/port: "{{ .Values.frontend.service.targetPort }}"
+    prometheus.io/path: "{{ .Values.frontend.monitoring.metricsPath | default \"/metrics\" }}"
 spec:
   type: {{ .Values.frontend.service.type }}
   ports:
-  - port: {{ .Values.frontend.service.port }}
+  - name: http
+    port: {{ .Values.frontend.service.port }}
     targetPort: {{ .Values.frontend.service.targetPort }}
+    protocol: TCP
   selector:
     app: {{ .Values.frontend.appname }}

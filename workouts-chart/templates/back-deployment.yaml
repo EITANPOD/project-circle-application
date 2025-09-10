@@ -14,10 +14,19 @@ spec:
       labels:
         app: {{ .Values.backend.appname }}
         {{- include "workouts-chart.labels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "{{ .Values.backend.monitoring.enabled | default true }}"
+        prometheus.io/port: "{{ .Values.backend.service.port }}"
+        prometheus.io/path: "{{ .Values.backend.monitoring.metricsPath | default \"/metrics\" }}"
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
       containers:
       - name: {{ .Values.backend.appname }}
         image: {{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.backend.service.port }}
         env:
@@ -56,19 +65,23 @@ spec:
             configMapKeyRef:
               name: {{ .Values.backend.configmap.name }}
               key: DB_NAME
-
-        # readinessProbe:
-        #   httpGet:
-        #     path: /health
-        #     port: {{ .Values.backend.service.port }}
-        #   initialDelaySeconds: 30
-        #   periodSeconds: 10
-        # livenessProbe:
-        #   httpGet:
-        #     path: /health
-        #     port: {{ .Values.backend.service.port }}
-        #   initialDelaySeconds: 60
-        #   periodSeconds: 30
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.backend.service.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.backend.service.port }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
         resources:
           limits:
             cpu: {{ .Values.backend.resources.limits.cpu }}

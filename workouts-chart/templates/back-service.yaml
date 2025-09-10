@@ -3,9 +3,18 @@ kind: Service
 metadata:
   name: {{ .Values.backend.appname }}
   namespace: {{ .Values.global.destination.namespace }}
+  labels:
+    app: {{ .Values.backend.appname }}
+    {{- include "workouts-chart.labels" . | nindent 4 }}
+  annotations:
+    prometheus.io/scrape: "{{ .Values.backend.monitoring.enabled | default true }}"
+    prometheus.io/port: "{{ .Values.backend.service.port }}"
+    prometheus.io/path: "{{ .Values.backend.monitoring.metricsPath | default \"/metrics\" }}"
 spec:
   selector:
     app: {{ .Values.backend.appname }}
   ports:
-  - port: {{ .Values.backend.service.port }}
+  - name: http
+    port: {{ .Values.backend.service.port }}
     targetPort: {{ .Values.backend.service.port }}
+    protocol: TCP

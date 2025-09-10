@@ -14,12 +14,38 @@ spec:
       labels:
         app: {{ .Values.frontend.appname }}
         {{- include "workouts-chart.labels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "{{ .Values.frontend.monitoring.enabled | default false }}"
+        prometheus.io/port: "{{ .Values.frontend.service.targetPort }}"
+        prometheus.io/path: "{{ .Values.frontend.monitoring.metricsPath | default \"/metrics\" }}"
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
       containers:
       - name: {{ .Values.frontend.appname }}
         image: {{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}
+        imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.frontend.service.targetPort }}
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.frontend.service.targetPort }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.frontend.service.targetPort }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
         resources:
           limits:
             memory: {{ .Values.frontend.resources.limits.memory }}
