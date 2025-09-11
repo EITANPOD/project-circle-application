@@ -1,0 +1,188 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workouts-app-dashboard
+  namespace: {{ .Values.global.destination.namespace }}
+  labels:
+    grafana_dashboard: "1"
+    app: {{ .Values.backend.appname }}
+    {{- include "workouts-chart.labels" . | nindent 4 }}
+data:
+  workouts-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Workouts Application Dashboard",
+        "tags": ["kubernetes", "workouts", "monitoring"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Application Health Overview",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "up{job=~\".*workouts.*\"}",
+                "legendFormat": "{{ "{{" }}instance{{ "}}" }}"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "green", "value": 1}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Pod Status",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "kube_pod_status_phase{namespace=\"{{ .Values.global.destination.namespace }}\", phase=\"Running\"}",
+                "legendFormat": "Running Pods"
+              },
+              {
+                "expr": "kube_pod_status_phase{namespace=\"{{ .Values.global.destination.namespace }}\", phase=\"Pending\"}",
+                "legendFormat": "Pending Pods"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "CPU Usage by Pod",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{namespace=\"{{ .Values.global.destination.namespace }}\", container!=\"POD\", container!=\"\"}[5m]) * 100",
+                "legendFormat": "{{ "{{" }}pod{{ "}}" }} - {{ "{{" }}container{{ "}}" }}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "CPU Usage %",
+                "min": 0,
+                "max": 100
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Memory Usage by Pod",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "container_memory_working_set_bytes{namespace=\"{{ .Values.global.destination.namespace }}\", container!=\"POD\", container!=\"\"} / 1024 / 1024",
+                "legendFormat": "{{ "{{" }}pod{{ "}}" }} - {{ "{{" }}container{{ "}}" }}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Memory Usage (MB)",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "HTTP Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job=~\".*workouts.*\"}[5m])",
+                "legendFormat": "{{ "{{" }}job{{ "}}" }} - {{ "{{" }}method{{ "}}" }} {{ "{{" }}endpoint{{ "}}" }}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Requests/sec",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "id": 6,
+            "title": "HTTP Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=~\".*workouts.*\"}[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=~\".*workouts.*\"}[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Response Time (seconds)",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          },
+          {
+            "id": 7,
+            "title": "Error Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job=~\".*workouts.*\", status=~\"5..\"}[5m]) / rate(http_requests_total{job=~\".*workouts.*\"}[5m]) * 100",
+                "legendFormat": "5xx Error Rate %"
+              },
+              {
+                "expr": "rate(http_requests_total{job=~\".*workouts.*\", status=~\"4..\"}[5m]) / rate(http_requests_total{job=~\".*workouts.*\"}[5m]) * 100",
+                "legendFormat": "4xx Error Rate %"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Error Rate %",
+                "min": 0,
+                "max": 100
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+          },
+          {
+            "id": 8,
+            "title": "Pod Restarts",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(kube_pod_container_status_restarts_total{namespace=\"{{ .Values.global.destination.namespace }}\"}[5m])",
+                "legendFormat": "{{ "{{" }}pod{{ "}}" }} - {{ "{{" }}container{{ "}}" }}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Restarts/sec",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s",
+        "schemaVersion": 27,
+        "version": 1
+      }
+    }
