@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Icon } from '../components/Icon'
 
 type Workout = { 
   id: number; 
@@ -80,6 +81,8 @@ export function Workouts() {
   })
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [aiGeneratedWorkout, setAiGeneratedWorkout] = useState<any>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [workoutToDelete, setWorkoutToDelete] = useState<Workout | null>(null)
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -203,12 +206,34 @@ export function Workouts() {
     }
   }
 
-  async function deleteWorkout(id: number) {
+  function confirmDeleteWorkout(workout: Workout) {
+    setWorkoutToDelete(workout)
+    setShowDeleteConfirm(true)
+  }
+
+  async function deleteWorkout() {
+    if (!workoutToDelete) return
+    
     const base = (window as any).__API_BASE__ || ''
-    await fetch(`${base}/api/workouts/${id}`, { method: 'DELETE', credentials: 'include' })
-    loadWorkouts()
-    if (selectedWorkout?.id === id) {
-      setSelectedWorkout(null)
+    try {
+      const res = await fetch(`${base}/api/workouts/${workoutToDelete.id}`, { 
+        method: 'DELETE', 
+        credentials: 'include' 
+      })
+      
+      if (res.ok) {
+        await loadWorkouts()
+        if (selectedWorkout?.id === workoutToDelete.id) {
+          setSelectedWorkout(null)
+        }
+        setShowDeleteConfirm(false)
+        setWorkoutToDelete(null)
+      } else {
+        alert('Failed to delete workout. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error deleting workout:', error)
+      alert('Error deleting workout. Please try again.')
     }
   }
 
@@ -502,7 +527,8 @@ export function Workouts() {
               />
             </div>
             <button type="submit" className="form-button add-workout-btn">
-              <span>💪</span> Add Workout
+              <Icon name="plus" size={16} className="mr-2" />
+              Add Workout
             </button>
           </form>
           
@@ -511,7 +537,8 @@ export function Workouts() {
               className="ai-generate-btn"
               onClick={() => setShowAIModal(true)}
             >
-              <span>🤖</span> Generate with AI
+              <Icon name="bot" size={16} className="mr-2" />
+              Generate with AI
             </button>
           </div>
         </div>
@@ -539,14 +566,14 @@ export function Workouts() {
                     onClick={(e) => { e.stopPropagation(); nav(`/workouts/${w.id}`) }}
                     title="View Details"
                   >
-                    👁️
+                    <Icon name="eye" size={16} />
                   </button>
                   <button 
                     className="delete-btn"
-                    onClick={(e) => { e.stopPropagation(); deleteWorkout(w.id) }}
+                    onClick={(e) => { e.stopPropagation(); confirmDeleteWorkout(w) }}
                     title="Delete Workout"
                   >
-                    X
+                    <Icon name="trash-2" size={16} />
                   </button>
                 </div>
               </div>
@@ -574,7 +601,7 @@ export function Workouts() {
               className="btn btn-primary action-btn"
               onClick={() => setShowExerciseForm(!showExerciseForm)}
             >
-              <span>{showExerciseForm ? '❌' : '➕'}</span>
+              <Icon name={showExerciseForm ? "x" : "plus"} size={16} className="mr-2" />
               {showExerciseForm ? 'Cancel' : 'Add Exercise'}
             </button>
             <button 
@@ -586,7 +613,7 @@ export function Workouts() {
                 setShowLoggingForm(!showLoggingForm)
               }}
             >
-              <span>{showLoggingForm ? '❌' : '📝'}</span>
+              <Icon name={showLoggingForm ? "x" : "edit"} size={16} className="mr-2" />
               {showLoggingForm ? 'Cancel Logging' : 'Log Workout'}
             </button>
           </div>
@@ -642,13 +669,19 @@ export function Workouts() {
                   onChange={e => setExerciseForm(prev => ({ ...prev, notes: e.target.value }))}
                 />
               </div>
-              <button type="submit" className="form-button">Add Exercise</button>
+              <button type="submit" className="form-button">
+                <Icon name="plus" size={16} className="mr-2" />
+                Add Exercise
+              </button>
             </form>
           )}
 
           {showLoggingForm && selectedWorkout.exercises && (
             <form onSubmit={logWorkout} className="logging-section">
-              <h4>📝 Log Your Workout</h4>
+              <h4>
+                <Icon name="edit" size={20} className="mr-2" />
+                Log Your Workout
+              </h4>
               <div className="form-group">
                 <input 
                   className="form-input"
@@ -718,12 +751,13 @@ export function Workouts() {
                 })
               ) : (
                 <div className="no-exercises-message">
-                  <span className="no-exercises-icon">🏋️‍♂️</span>
+                  <Icon name="dumbbell" size={48} className="no-exercises-icon" />
                   <p>No exercises in this workout yet. Add exercises first!</p>
                 </div>
               )}
               <button type="submit" className="log-btn">
-                <span>💾</span> Save Workout Log
+                <Icon name="save" size={16} className="mr-2" />
+                Save Workout Log
               </button>
             </form>
           )}
@@ -754,7 +788,7 @@ export function Workouts() {
                       className="delete-btn"
                       onClick={() => deleteExercise(exercise.id)}
                     >
-                      X
+                      <Icon name="trash-2" size={16} />
                     </button>
                   </div>
                 </div>
@@ -938,12 +972,15 @@ export function Workouts() {
         <div className="ai-modal-overlay" onClick={() => setShowAIModal(false)}>
           <div className="ai-modal" onClick={e => e.stopPropagation()}>
             <div className="ai-modal-header">
-              <h3>🤖 AI Workout Generator</h3>
+              <h3>
+                <Icon name="bot" size={20} className="mr-2" />
+                AI Workout Generator
+              </h3>
               <button 
                 className="ai-modal-close"
                 onClick={() => setShowAIModal(false)}
               >
-                ✕
+                <Icon name="x" size={16} />
               </button>
             </div>
             
@@ -1036,12 +1073,15 @@ export function Workouts() {
         <div className="ai-preview-overlay" onClick={() => setAiGeneratedWorkout(null)}>
           <div className="ai-preview-modal" onClick={e => e.stopPropagation()}>
             <div className="ai-preview-header">
-              <h3>🤖 AI Generated Workout</h3>
+              <h3>
+                <Icon name="bot" size={20} className="mr-2" />
+                AI Generated Workout
+              </h3>
               <button 
                 className="ai-modal-close"
                 onClick={() => setAiGeneratedWorkout(null)}
               >
-                ✕
+                <Icon name="x" size={16} />
               </button>
             </div>
             
@@ -1050,8 +1090,14 @@ export function Workouts() {
                 <h4>{aiGeneratedWorkout.title}</h4>
                 <p>{aiGeneratedWorkout.description}</p>
                 <div className="ai-workout-meta">
-                  <span className="ai-meta-item">⏱️ {aiGeneratedWorkout.estimated_duration} minutes</span>
-                  <span className="ai-meta-item">💪 {aiGeneratedWorkout.difficulty}</span>
+                  <span className="ai-meta-item">
+                    <Icon name="clock" size={16} className="mr-1" />
+                    {aiGeneratedWorkout.estimated_duration} minutes
+                  </span>
+                  <span className="ai-meta-item">
+                    <Icon name="zap" size={16} className="mr-1" />
+                    {aiGeneratedWorkout.difficulty}
+                  </span>
                 </div>
               </div>
               
@@ -1075,7 +1121,10 @@ export function Workouts() {
               
               {aiGeneratedWorkout.tips && aiGeneratedWorkout.tips.length > 0 && (
                 <div className="ai-tips">
-                  <h5>💡 Tips:</h5>
+                  <h5>
+                    <Icon name="lightbulb" size={16} className="mr-2" />
+                    Tips:
+                  </h5>
                   <ul>
                     {aiGeneratedWorkout.tips.map((tip: string, index: number) => (
                       <li key={index}>{tip}</li>
@@ -1099,6 +1148,46 @@ export function Workouts() {
                   {isGeneratingAI ? 'Creating...' : 'Save This Workout'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && workoutToDelete && (
+        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-icon">
+                <Icon name="alert-triangle" size={24} />
+              </div>
+              <h3 className="modal-title">Delete Workout</h3>
+            </div>
+            
+            <div className="modal-content">
+              <p className="modal-message">
+                Are you sure you want to delete <strong>"{workoutToDelete.title}"</strong>?
+              </p>
+              <p className="modal-warning">
+                This action cannot be undone. All exercises and workout logs associated with this workout will be permanently deleted.
+              </p>
+            </div>
+            
+            <div className="modal-actions">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                <Icon name="x" size={16} className="mr-2" />
+                Cancel
+              </button>
+              <button 
+                className="btn btn-danger"
+                onClick={deleteWorkout}
+              >
+                <Icon name="trash-2" size={16} className="mr-2" />
+                Delete Workout
+              </button>
             </div>
           </div>
         </div>

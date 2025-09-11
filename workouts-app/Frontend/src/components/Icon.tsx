@@ -85,7 +85,7 @@ import {
   HandMetal,
   Hand,
   Home,
-  UserPlus
+  UserPlus, AlertTriangle
 } from 'lucide-react'
 
 interface IconProps {
@@ -116,9 +116,11 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   'home': Home,
   'user': User,
   'user-plus': UserPlus,
+  'alert-triangle': AlertTriangle,
   'settings': Settings,
   'plus': Plus,
   'trash': Trash2,
+  'trash-2': Trash2,
   'eye': Eye,
   'calendar': Calendar,
   'share': Share2,

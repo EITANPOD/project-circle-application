@@ -118,9 +118,39 @@ def api_delete(wid: int, user=Depends(require_user), session=Depends(get_session
     w = session.get(Workout, wid)
     if not w or w.owner_id != user.id:
         raise HTTPException(404)
-    session.delete(w)
-    session.commit()
-    return {"ok": True}
+    
+    try:
+        # First, get all exercises for this workout
+        from ..models import Exercise
+        exercises = session.exec(select(Exercise).where(Exercise.workout_id == wid)).all()
+        exercise_ids = [ex.id for ex in exercises]
+        
+        # Delete all exercise logs that reference these exercises
+        from ..models import ExerciseLog
+        if exercise_ids:
+            exercise_logs = session.exec(select(ExerciseLog).where(ExerciseLog.exercise_id.in_(exercise_ids))).all()
+            for ex_log in exercise_logs:
+                session.delete(ex_log)
+        
+        # Delete all workout logs for this workout
+        from ..models import WorkoutLog
+        workout_logs = session.exec(select(WorkoutLog).where(WorkoutLog.workout_id == wid)).all()
+        for log in workout_logs:
+            session.delete(log)
+        
+        # Delete all exercises for this workout
+        for exercise in exercises:
+            session.delete(exercise)
+        
+        # Finally delete the workout
+        session.delete(w)
+        session.commit()
+        return {"ok": True}
+        
+    except Exception as e:
+        session.rollback()
+        print(f"Error deleting workout {wid}: {e}")
+        raise HTTPException(500, f"Error deleting workout: {str(e)}")
 
 
 # Exercise endpoints

@@ -44,6 +44,7 @@ export function Dashboard() {
   })
   const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([])
   const [exerciseData, setExerciseData] = useState<ExerciseData[]>([])
+  const [workoutData, setWorkoutData] = useState<ExerciseData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
@@ -89,7 +90,9 @@ export function Dashboard() {
   async function loadExerciseLogs(workouts: any[]) {
     const base = (window as any).__API_BASE__ || ''
     const exerciseCounts: { [key: string]: number } = {}
+    const workoutCounts: { [key: string]: number } = {}
     let totalLoggedExercises = 0
+    let totalLoggedDuration = 0
 
     try {
       // Load exercise logs from all workouts
@@ -101,6 +104,15 @@ export function Dashboard() {
           
           // Process each workout log
           for (const log of logs) {
+            // Count workout completions
+            const workoutName = workout.title
+            workoutCounts[workoutName] = (workoutCounts[workoutName] || 0) + 1
+            
+            // Calculate duration from workout log (estimate 2 minutes per exercise)
+            const exerciseCount = log.exercise_logs?.length || 0
+            const workoutDuration = exerciseCount * 2
+            totalLoggedDuration += workoutDuration
+            
             if (log.exercise_logs && Array.isArray(log.exercise_logs)) {
               for (const exerciseLog of log.exercise_logs) {
                 // Find the exercise name from the workout's exercises
@@ -116,8 +128,8 @@ export function Dashboard() {
         }
       }
       
-      // Update stats with logged exercise data
-      calculateStatsWithLogs(workouts, exerciseCounts, totalLoggedExercises)
+      // Update stats with logged exercise and workout data
+      calculateStatsWithLogs(workouts, exerciseCounts, totalLoggedExercises, workoutCounts, totalLoggedDuration)
       
     } catch (error) {
       console.error('Error loading exercise logs:', error)
@@ -126,39 +138,19 @@ export function Dashboard() {
     }
   }
 
-  function calculateStatsWithLogs(workouts: any[], exerciseCounts: { [key: string]: number }, totalLoggedExercises: number) {
+  function calculateStatsWithLogs(workouts: any[], exerciseCounts: { [key: string]: number }, totalLoggedExercises: number, workoutCounts: { [key: string]: number }, totalLoggedDuration: number) {
     const now = new Date()
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
 
-    let totalExercises = 0
-    let totalDuration = 0
     let thisWeekCount = 0
     let lastWeekCount = 0
 
-    // Process each workout for basic stats
-    workouts.forEach((workout, index) => {
-      console.log(`Dashboard: Processing workout ${index}:`, workout)
-      
-      if (workout.exercises && Array.isArray(workout.exercises)) {
-        totalExercises += workout.exercises.length
-      }
-
-      // Calculate duration (estimate 2 minutes per exercise)
-      const workoutDuration = (workout.exercises?.length || 0) * 2
-      totalDuration += workoutDuration
-
-      // Count workouts by week
-      const workoutDate = new Date(workout.created_at)
-      if (workoutDate >= oneWeekAgo) {
-        thisWeekCount++
-      } else if (workoutDate >= twoWeeksAgo && workoutDate < oneWeekAgo) {
-        lastWeekCount++
-      }
+    // Count workouts by week based on actual logged workouts
+    Object.values(workoutCounts).forEach(count => {
+      // For simplicity, assume logged workouts are recent
+      thisWeekCount += count
     })
-    
-    console.log('Dashboard: Exercise counts from logs:', exerciseCounts)
-    console.log('Dashboard: Total logged exercises:', totalLoggedExercises)
 
     // Find favorite exercise from logged data
     const favoriteExercise = Object.keys(exerciseCounts).length > 0 
@@ -180,21 +172,32 @@ export function Dashboard() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5) // Top 5 exercises
 
+    // Generate workout data for pie chart from logged workouts
+    const workoutData = Object.entries(workoutCounts)
+      .map(([name, count], index) => ({
+        name,
+        count,
+        color: getColorForIndex(index)
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5) // Top 5 workouts
+
     const newStats = {
-      totalWorkouts: workouts.length,
+      totalWorkouts: Object.values(workoutCounts).reduce((sum, count) => sum + count, 0), // Total logged workouts
       totalExercises: totalLoggedExercises, // Use logged exercises count
-      totalDuration,
+      totalDuration: totalLoggedDuration, // Use logged duration
       currentStreak: calculateCurrentStreak(workouts),
       longestStreak: calculateLongestStreak(workouts),
       thisWeekWorkouts: thisWeekCount,
       lastWeekWorkouts: lastWeekCount,
       favoriteExercise,
-      averageWorkoutDuration: workouts.length > 0 ? Math.round(totalDuration / workouts.length) : 0
+      averageWorkoutDuration: Object.values(workoutCounts).length > 0 ? Math.round(totalLoggedDuration / Object.values(workoutCounts).reduce((sum, count) => sum + count, 0)) : 0
     }
 
     setStats(newStats)
     setWeeklyData(weeklyData)
     setExerciseData(exerciseData)
+    setWorkoutData(workoutData)
     setLastUpdated(new Date())
   }
 
@@ -468,6 +471,37 @@ export function Dashboard() {
               <Icon name="activity" size={48} />
               <p>No exercise data available yet</p>
               <p>Start logging workouts to see your top exercises!</p>
+            </div>
+          )}
+        </div>
+
+        <div className="chart-container">
+          <h3 className="chart-title">Top Workouts</h3>
+          {workoutData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={workoutData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="count"
+                >
+                  {workoutData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="no-data-message">
+              <Icon name="dumbbell" size={48} />
+              <p>No workout data available yet</p>
+              <p>Start logging workouts to see your top workouts!</p>
             </div>
           )}
         </div>
