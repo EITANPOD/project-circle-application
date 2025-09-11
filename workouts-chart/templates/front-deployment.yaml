@@ -17,7 +17,7 @@ spec:
       annotations:
         prometheus.io/scrape: "{{ .Values.frontend.monitoring.enabled | default false }}"
         prometheus.io/port: "{{ .Values.frontend.service.targetPort }}"
-        prometheus.io/path: "{{ .Values.frontend.monitoring.metricsPath | default \"/metrics\" }}"
+        prometheus.io/path: "{{ .Values.frontend.monitoring.metricsPath }}"
     spec:
       securityContext:
         runAsNonRoot: true
