@@ -1,6 +1,8 @@
 import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
+from sqlalchemy.orm import selectinload
+from typing import List
 from ..db import get_session
 from ..models import Workout, Exercise, WorkoutLog, ExerciseLog
 from ..auth import require_user
@@ -31,16 +33,56 @@ def api_test_ai():
 
 @router.get("")
 def api_list(user=Depends(require_user), session=Depends(get_session)):
-    ws = session.exec(
-        select(Workout).where(Workout.owner_id == user.id).order_by(Workout.created_at.desc())
-    ).all()
-    return ws
+    # Get workouts with exercises included
+    statement = select(Workout).where(Workout.owner_id == user.id).options(selectinload(Workout.exercises)).order_by(Workout.created_at.desc())
+    ws = session.exec(statement).all()
+    
+    # Debug logging
+    print(f"API: Returning {len(ws)} workouts for user {user.id}")
+    for i, workout in enumerate(ws):
+        print(f"API: Workout {i}: {workout.title}, exercises: {len(workout.exercises) if workout.exercises else 0}")
+        if workout.exercises:
+            for j, exercise in enumerate(workout.exercises):
+                print(f"API:   Exercise {j}: {exercise.name}")
+    
+    # Convert to dict to ensure proper serialization
+    result = []
+    for workout in ws:
+        workout_dict = {
+            "id": workout.id,
+            "title": workout.title,
+            "notes": workout.notes,
+            "created_at": workout.created_at,
+            "owner_id": workout.owner_id,
+            "exercises": [
+                {
+                    "id": exercise.id,
+                    "name": exercise.name,
+                    "sets": exercise.sets,
+                    "reps": exercise.reps,
+                    "rest_seconds": exercise.rest_seconds,
+                    "notes": exercise.notes,
+                    "created_at": exercise.created_at,
+                    "workout_id": exercise.workout_id
+                }
+                for exercise in (workout.exercises or [])
+            ]
+        }
+        result.append(workout_dict)
+    
+    print(f"API: Serialized result has {len(result)} workouts")
+    for i, workout in enumerate(result):
+        print(f"API: Serialized workout {i}: {workout['title']}, exercises: {len(workout['exercises'])}")
+    
+    return result
 
 
 @router.get("/{wid}")
 def api_get(wid: int, user=Depends(require_user), session=Depends(get_session)):
-    w = session.get(Workout, wid)
-    if not w or w.owner_id != user.id:
+    # Get workout with exercises included
+    statement = select(Workout).where(Workout.id == wid, Workout.owner_id == user.id).options(selectinload(Workout.exercises))
+    w = session.exec(statement).first()
+    if not w:
         raise HTTPException(404)
     return w
 

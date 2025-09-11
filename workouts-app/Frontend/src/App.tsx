@@ -6,6 +6,9 @@ import { Workouts } from './pages/Workouts'
 import { WorkoutDetail } from './pages/WorkoutDetail'
 import { Home } from './pages/Home'
 import { Settings } from './pages/Settings'
+import { Dashboard } from './pages/Dashboard'
+import { WorkoutTemplates } from './pages/WorkoutTemplates'
+import { ExerciseLibrary } from './pages/ExerciseLibrary'
 import { AuthProvider } from './contexts/AuthContext'
 import { Navigation } from './components/Navigation'
 
@@ -22,8 +25,11 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/workouts" element={<Workouts />} />
               <Route path="/workouts/:id" element={<WorkoutDetail />} />
+              <Route path="/templates" element={<WorkoutTemplates />} />
+              <Route path="/exercises" element={<ExerciseLibrary />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </main>
