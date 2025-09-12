@@ -2662,6 +2662,30 @@ body {
   border: 1px solid var(--gray-200);
   position: relative;
   overflow: hidden;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-container .recharts-wrapper {
+  flex: 1;
+}
+
+.chart-container .recharts-legend-wrapper {
+  margin-top: var(--space-4) !important;
+  padding: 0 !important;
+}
+
+.chart-container .recharts-legend-item {
+  margin: 0 var(--space-2) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.chart-container .recharts-legend-item-text {
+  margin-left: var(--space-1) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
 }
 
 .chart-container::before {

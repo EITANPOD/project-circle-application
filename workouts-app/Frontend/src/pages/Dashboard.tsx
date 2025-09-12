@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Icon } from '../components/Icon'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts'
 
 type WorkoutStats = {
   totalWorkouts: number
@@ -447,15 +447,15 @@ export function Dashboard() {
         <div className="chart-container">
           <h3 className="chart-title">Top Exercises</h3>
           {exerciseData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie
                   data={exerciseData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
+                  label={false}
+                  outerRadius={70}
                   fill="#8884d8"
                   dataKey="count"
                 >
@@ -463,7 +463,21 @@ export function Dashboard() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: any, name: any, props: any) => [
+                    `${props.payload.name}: ${value} times`,
+                    'Count'
+                  ]}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  formatter={(value: any, entry: any) => (
+                    <span style={{ color: entry.color, fontSize: '12px' }}>
+                      {value.length > 12 ? `${value.substring(0, 12)}...` : value}
+                    </span>
+                  )}
+                />
               </PieChart>
             </ResponsiveContainer>
           ) : (
@@ -478,15 +492,15 @@ export function Dashboard() {
         <div className="chart-container">
           <h3 className="chart-title">Top Workouts</h3>
           {workoutData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie
                   data={workoutData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
+                  label={false}
+                  outerRadius={70}
                   fill="#8884d8"
                   dataKey="count"
                 >
@@ -494,7 +508,21 @@ export function Dashboard() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: any, name: any, props: any) => [
+                    `${props.payload.name}: ${value} times`,
+                    'Count'
+                  ]}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  formatter={(value: any, entry: any) => (
+                    <span style={{ color: entry.color, fontSize: '12px' }}>
+                      {value.length > 12 ? `${value.substring(0, 12)}...` : value}
+                    </span>
+                  )}
+                />
               </PieChart>
             </ResponsiveContainer>
           ) : (
