@@ -104,6 +104,21 @@ export function WorkoutDetail() {
   }
 
   function openLogModal() {
+    // Initialize exercise logs with default values
+    const initialExerciseLogs: {[key: number]: {sets: number, reps: number, weight?: number, notes?: string}} = {}
+    
+    if (workout?.exercises) {
+      workout.exercises.forEach(exercise => {
+        initialExerciseLogs[exercise.id] = {
+          sets: exercise.sets,
+          reps: exercise.reps,
+          weight: 0,
+          notes: ''
+        }
+      })
+    }
+    
+    setExerciseLogs(initialExerciseLogs)
     setLogNotes('')
     setShowLogModal(true)
   }
@@ -138,6 +153,14 @@ export function WorkoutDetail() {
     setIsLogging(true)
     const base = (window as any).__API_BASE__ || ''
     
+    const exerciseLogsArray = Object.entries(exerciseLogs).map(([exerciseId, log]) => ({
+      exercise_id: parseInt(exerciseId),
+      actual_sets: log.sets,
+      actual_reps: log.reps,
+      weight: log.weight || 0,
+      notes: log.notes || ''
+    }))
+    
     try {
       const res = await fetch(`${base}/api/workouts/${id}/log`, {
         method: 'POST',
@@ -145,13 +168,7 @@ export function WorkoutDetail() {
         credentials: 'include',
         body: JSON.stringify({
           notes: logNotes,
-          exercise_logs: Object.entries(exerciseLogs).map(([exerciseId, log]) => ({
-            exercise_id: parseInt(exerciseId),
-            actual_sets: log.sets,
-            actual_reps: log.reps,
-            weight: log.weight || 0,
-            notes: log.notes || ''
-          }))
+          exercise_logs: exerciseLogsArray
         })
       })
       

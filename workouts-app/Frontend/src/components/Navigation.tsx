@@ -43,14 +43,18 @@ export function Navigation() {
               <Icon name="bar-chart" size={16} className="mr-2" />
               Dashboard
             </Link>
-            <Link to="/workouts" className="nav-link">
-              <Icon name="dumbbell" size={16} className="mr-2" />
-              My Workouts
-            </Link>
-            <Link to="/templates" className="nav-link">
-              <Icon name="bookmark" size={16} className="mr-2" />
-              Templates
-            </Link>
+                   <Link to="/workouts" className="nav-link">
+                     <Icon name="dumbbell" size={16} className="mr-2" />
+                     My Workouts
+                   </Link>
+                   <Link to="/history" className="nav-link">
+                     <Icon name="clock" size={16} className="mr-2" />
+                     History
+                   </Link>
+                   <Link to="/templates" className="nav-link">
+                     <Icon name="bookmark" size={16} className="mr-2" />
+                     Templates
+                   </Link>
             <Link to="/exercises" className="nav-link">
               <Icon name="activity" size={16} className="mr-2" />
               Exercises

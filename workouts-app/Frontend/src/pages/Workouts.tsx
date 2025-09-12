@@ -101,10 +101,15 @@ export function Workouts() {
 
   async function loadExercises(workoutId: number) {
     const base = (window as any).__API_BASE__ || ''
+    console.log(`Loading exercises for workout ${workoutId}`)
     try {
       const res = await fetch(`${base}/api/workouts/${workoutId}/exercises`, { credentials: 'include' })
+      console.log(`Exercises API response for workout ${workoutId}:`, res.status)
+      
       if (res.ok) {
         const exercises = await res.json()
+        console.log(`Loaded ${exercises.length} exercises for workout ${workoutId}:`, exercises)
+        
         setWorkouts(prev => prev.map(w => 
           w.id === workoutId ? { ...w, exercises } : w
         ))
@@ -112,6 +117,7 @@ export function Workouts() {
         // Also update the selected workout if it's the current one
         setSelectedWorkout(prev => {
           if (prev && prev.id === workoutId) {
+            console.log(`Updating selectedWorkout with exercises for workout ${workoutId}`)
             return { ...prev, exercises }
           }
           return prev
@@ -119,11 +125,12 @@ export function Workouts() {
         
         return exercises
       } else {
-        console.error('Failed to load exercises:', res.status)
+        const errorText = await res.text()
+        console.error(`Failed to load exercises for workout ${workoutId}:`, res.status, errorText)
         return []
       }
     } catch (error) {
-      console.error('Error loading exercises:', error)
+      console.error(`Error loading exercises for workout ${workoutId}:`, error)
       return []
     }
   }
@@ -289,11 +296,9 @@ export function Workouts() {
     try {
       // Validate that we have exercise logs to submit
       if (!loggingForm.exercise_logs || loggingForm.exercise_logs.length === 0) {
-        console.error('No exercise logs to submit')
+        alert('No exercise data to log. Please make sure exercises are loaded and try again.')
         return
       }
-      
-      console.log('Submitting workout log:', JSON.stringify(loggingForm, null, 2))
       
       const res = await fetch(`${base}/api/workouts/${selectedWorkout.id}/log`, {
         method: 'POST',
@@ -303,9 +308,6 @@ export function Workouts() {
       })
       
       if (res.ok) {
-        const responseData = await res.json()
-        console.log('Workout log saved successfully:', responseData)
-        
         // Reset form states immediately
         setLoggingForm({ notes: '', exercise_logs: [] })
         setShowLoggingForm(false)
@@ -318,9 +320,6 @@ export function Workouts() {
         // Show success message
         alert('Workout logged successfully!')
       } else {
-        console.error('Failed to log workout:', res.status)
-        const errorText = await res.text()
-        console.error('Error details:', errorText)
         alert('Failed to log workout. Please try again.')
       }
     } catch (error) {
@@ -349,7 +348,7 @@ export function Workouts() {
       setSelectedWorkout(workout)
       
       // Always reload exercises first, then logs to ensure exercises are available
-      await loadExercises(workout.id)
+      const exercises = await loadExercises(workout.id)
       await loadWorkoutLogs(workout.id)
     } catch (error) {
       console.error('Error selecting workout:', error)
@@ -361,8 +360,6 @@ export function Workouts() {
   }
 
   function updateLoggingForm(exerciseId: number, field: string, value: any) {
-    console.log(`Updating exercise ${exerciseId}, field: ${field}, value:`, value)
-    
     setLoggingForm(prev => {
       const existingIndex = prev.exercise_logs.findIndex(log => log.exercise_id === exerciseId)
       
@@ -373,7 +370,6 @@ export function Workouts() {
           ...updated[existingIndex], 
           [field]: value 
         }
-        console.log('Updated existing exercise log:', updated[existingIndex])
         return { ...prev, exercise_logs: updated }
       } else {
         // Create new exercise log entry
@@ -384,7 +380,6 @@ export function Workouts() {
           weight: field === 'weight' ? value : undefined,
           notes: field === 'notes' ? value : ''
         }
-        console.log('Created new exercise log:', newExerciseLog)
         return {
           ...prev,
           exercise_logs: [...prev.exercise_logs, newExerciseLog]
@@ -405,10 +400,22 @@ export function Workouts() {
     })
   }
 
-  function initializeLoggingForm() {
-    if (!selectedWorkout?.exercises) {
-      console.log('No exercises found in selected workout')
+  async function initializeLoggingForm() {
+    if (!selectedWorkout) {
       return
+    }
+    
+    if (!selectedWorkout.exercises || selectedWorkout.exercises.length === 0) {
+      const exercises = await loadExercises(selectedWorkout.id)
+      if (exercises && exercises.length > 0) {
+        // Update the selected workout with the loaded exercises
+        setSelectedWorkout(prev => prev ? { ...prev, exercises } : null)
+        // Recursively call this function now that exercises are loaded
+        return initializeLoggingForm()
+      } else {
+        alert('No exercises found for this workout. Please add exercises first.')
+        return
+      }
     }
     
     const initialExerciseLogs = selectedWorkout.exercises.map(exercise => ({
@@ -423,7 +430,6 @@ export function Workouts() {
       notes: '',
       exercise_logs: initialExerciseLogs
     })
-    console.log('Initialized logging form with exercises:', initialExerciseLogs)
   }
 
   async function generateAIWorkout() {
@@ -606,9 +612,13 @@ export function Workouts() {
             </button>
             <button 
               className="btn btn-secondary action-btn"
-              onClick={() => {
+              onClick={async () => {
                 if (!showLoggingForm) {
-                  initializeLoggingForm()
+                  // Ensure exercises are loaded first
+                  if (selectedWorkout && (!selectedWorkout.exercises || selectedWorkout.exercises.length === 0)) {
+                    await loadExercises(selectedWorkout.id)
+                  }
+                  await initializeLoggingForm()
                 }
                 setShowLoggingForm(!showLoggingForm)
               }}
@@ -691,64 +701,66 @@ export function Workouts() {
                 />
               </div>
               {selectedWorkout.exercises.length > 0 ? (
-                selectedWorkout.exercises.map(exercise => {
-                  const exerciseLog = loggingForm.exercise_logs.find(log => log.exercise_id === exercise.id)
-                  return (
-                    <div key={exercise.id} className="exercise-log-card">
-                      <div className="exercise-log-header">
-                        <h5 className="exercise-log-name">{exercise.name}</h5>
-                        <div className="exercise-log-target">
-                          Target: {exercise.sets} sets × {exercise.reps} reps
+                <div className="logging-exercises-container">
+                  {selectedWorkout.exercises.map(exercise => {
+                    const exerciseLog = loggingForm.exercise_logs.find(log => log.exercise_id === exercise.id)
+                    return (
+                      <div key={exercise.id} className="exercise-log-card">
+                        <div className="exercise-log-header">
+                          <h5 className="exercise-log-name">{exercise.name}</h5>
+                          <div className="exercise-log-target">
+                            Target: {exercise.sets} sets × {exercise.reps} reps
+                          </div>
+                        </div>
+                        <div className="log-inputs">
+                          <div className="log-input-group">
+                            <label className="log-label">Sets Completed</label>
+                            <input 
+                              className="log-input"
+                              type="number" 
+                              placeholder="0" 
+                              value={exerciseLog?.actual_sets || ''}
+                              onChange={e => updateLoggingForm(exercise.id, 'actual_sets', parseInt(e.target.value) || 0)}
+                              min="0"
+                            />
+                          </div>
+                          <div className="log-input-group">
+                            <label className="log-label">Reps per Set</label>
+                            <input 
+                              className="log-input"
+                              type="number" 
+                              placeholder="0" 
+                              value={exerciseLog?.actual_reps || ''}
+                              onChange={e => updateLoggingForm(exercise.id, 'actual_reps', parseInt(e.target.value) || 0)}
+                              min="0"
+                            />
+                          </div>
+                          <div className="log-input-group">
+                            <label className="log-label">Weight (kg)</label>
+                            <input 
+                              className="log-input"
+                              type="number" 
+                              placeholder="0" 
+                              value={exerciseLog?.weight || ''}
+                              onChange={e => updateLoggingForm(exercise.id, 'weight', parseFloat(e.target.value) || undefined)}
+                              min="0"
+                              step="0.5"
+                            />
+                          </div>
+                          <div className="log-input-group">
+                            <label className="log-label">Notes</label>
+                            <input 
+                              className="log-input"
+                              placeholder="How did it feel?" 
+                              value={exerciseLog?.notes || ''}
+                              onChange={e => updateLoggingForm(exercise.id, 'notes', e.target.value)}
+                            />
+                          </div>
                         </div>
                       </div>
-                      <div className="log-inputs">
-                        <div className="log-input-group">
-                          <label className="log-label">Sets Completed</label>
-                          <input 
-                            className="log-input"
-                            type="number" 
-                            placeholder="0" 
-                            value={exerciseLog?.actual_sets || ''}
-                            onChange={e => updateLoggingForm(exercise.id, 'actual_sets', parseInt(e.target.value) || 0)}
-                            min="0"
-                          />
-                        </div>
-                        <div className="log-input-group">
-                          <label className="log-label">Reps per Set</label>
-                          <input 
-                            className="log-input"
-                            type="number" 
-                            placeholder="0" 
-                            value={exerciseLog?.actual_reps || ''}
-                            onChange={e => updateLoggingForm(exercise.id, 'actual_reps', parseInt(e.target.value) || 0)}
-                            min="0"
-                          />
-                        </div>
-                        <div className="log-input-group">
-                          <label className="log-label">Weight (kg)</label>
-                          <input 
-                            className="log-input"
-                            type="number" 
-                            placeholder="0" 
-                            value={exerciseLog?.weight || ''}
-                            onChange={e => updateLoggingForm(exercise.id, 'weight', parseFloat(e.target.value) || undefined)}
-                            min="0"
-                            step="0.5"
-                          />
-                        </div>
-                        <div className="log-input-group">
-                          <label className="log-label">Notes</label>
-                          <input 
-                            className="log-input"
-                            placeholder="How did it feel?" 
-                            value={exerciseLog?.notes || ''}
-                            onChange={e => updateLoggingForm(exercise.id, 'notes', e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })
+                    )
+                  })}
+                </div>
               ) : (
                 <div className="no-exercises-message">
                   <Icon name="dumbbell" size={48} className="no-exercises-icon" />

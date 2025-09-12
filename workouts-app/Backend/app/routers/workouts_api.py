@@ -77,6 +77,73 @@ def api_list(user=Depends(require_user), session=Depends(get_session)):
     return result
 
 
+@router.get("/history")
+def api_get_workout_history(user=Depends(require_user), session=Depends(get_session)):
+    """Get all workout logs for the user with full details"""
+    from ..models import WorkoutLog, ExerciseLog, Exercise
+    
+    # Get all workout logs for the user
+    workout_logs = session.exec(
+        select(WorkoutLog)
+        .join(Workout)
+        .where(Workout.owner_id == user.id)
+        .order_by(WorkoutLog.workout_date.desc())
+    ).all()
+    
+    # Manually serialize the data to ensure relationships are included
+    result = []
+    for log in workout_logs:
+        print(f"Processing workout log {log.id} for workout {log.workout_id}")
+        
+        # Load the workout details
+        workout = session.get(Workout, log.workout_id)
+        print(f"  Workout: {workout.title if workout else 'None'}")
+        
+        # Load exercise logs with exercise details
+        exercise_logs = session.exec(
+            select(ExerciseLog)
+            .where(ExerciseLog.workout_log_id == log.id)
+        ).all()
+        print(f"  Found {len(exercise_logs)} exercise logs")
+        
+        # Load exercise details for each exercise log
+        exercise_logs_data = []
+        for ex_log in exercise_logs:
+            exercise = session.get(Exercise, ex_log.exercise_id)
+            exercise_logs_data.append({
+                "id": ex_log.id,
+                "sets_completed": ex_log.actual_sets,
+                "reps_completed": ex_log.actual_reps,
+                "weight_used": ex_log.weight,
+                "notes": ex_log.notes,
+                "exercise": {
+                    "id": exercise.id if exercise else 0,
+                    "name": exercise.name if exercise else "Unknown Exercise",
+                    "sets": exercise.sets if exercise else 0,
+                    "reps": exercise.reps if exercise else 0,
+                    "rest_seconds": exercise.rest_seconds if exercise else 0
+                }
+            })
+        
+        # Create the serialized log entry
+        log_data = {
+            "id": log.id,
+            "workout_date": log.workout_date.isoformat() if log.workout_date else None,
+            "notes": log.notes,
+            "created_at": log.created_at.isoformat() if log.created_at else None,
+            "workout": {
+                "id": workout.id if workout else 0,
+                "title": workout.title if workout else "Unknown Workout",
+                "notes": workout.notes if workout else ""
+            },
+            "exercise_logs": exercise_logs_data
+        }
+        
+        result.append(log_data)
+    
+    return result
+
+
 @router.get("/{wid}")
 def api_get(wid: int, user=Depends(require_user), session=Depends(get_session)):
     # Get workout with exercises included
