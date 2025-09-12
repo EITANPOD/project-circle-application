@@ -2627,6 +2627,18 @@ body {
   line-height: 1;
 }
 
+.stat-value-long {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 0;
+  line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+}
+
 .stat-label {
   color: var(--gray-600);
   font-weight: 600;

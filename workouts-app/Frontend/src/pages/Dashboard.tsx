@@ -13,6 +13,7 @@ type WorkoutStats = {
   thisWeekWorkouts: number
   lastWeekWorkouts: number
   favoriteExercise: string
+  favoriteWorkout: string
   averageWorkoutDuration: number
 }
 
@@ -40,6 +41,7 @@ export function Dashboard() {
     thisWeekWorkouts: 0,
     lastWeekWorkouts: 0,
     favoriteExercise: 'None',
+    favoriteWorkout: 'None',
     averageWorkoutDuration: 0
   })
   const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([])
@@ -159,6 +161,13 @@ export function Dashboard() {
         )
       : 'None'
 
+    // Find favorite workout from logged data
+    const favoriteWorkout = Object.keys(workoutCounts).length > 0 
+      ? Object.keys(workoutCounts).reduce((a, b) => 
+          workoutCounts[a] > workoutCounts[b] ? a : b, 'None'
+        )
+      : 'None'
+
     // Generate weekly data for chart
     const weeklyData = generateWeeklyData(workouts)
     
@@ -191,6 +200,7 @@ export function Dashboard() {
       thisWeekWorkouts: thisWeekCount,
       lastWeekWorkouts: lastWeekCount,
       favoriteExercise,
+      favoriteWorkout,
       averageWorkoutDuration: Object.values(workoutCounts).length > 0 ? Math.round(totalLoggedDuration / Object.values(workoutCounts).reduce((sum, count) => sum + count, 0)) : 0
     }
 
@@ -272,6 +282,7 @@ export function Dashboard() {
       thisWeekWorkouts: thisWeekCount,
       lastWeekWorkouts: lastWeekCount,
       favoriteExercise,
+      favoriteWorkout: 'None', // Fallback since we don't have workout counts in this function
       averageWorkoutDuration: workouts.length > 0 ? Math.round(totalDuration / workouts.length) : 0
     })
 
@@ -374,7 +385,7 @@ export function Dashboard() {
           </div>
           <div className="stat-content">
             <h3 className="stat-value">{stats.totalWorkouts}</h3>
-            <p className="stat-label">Total Workouts</p>
+            <p className="stat-label">Total Workouts Completed</p>
           </div>
         </div>
 
@@ -385,16 +396,6 @@ export function Dashboard() {
           <div className="stat-content">
             <h3 className="stat-value">{stats.totalExercises}</h3>
             <p className="stat-label">Exercises Completed</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <Icon name="clock" size={24} />
-          </div>
-          <div className="stat-content">
-            <h3 className="stat-value">{stats.totalDuration}m</h3>
-            <p className="stat-label">Total Time</p>
           </div>
         </div>
 
@@ -423,8 +424,18 @@ export function Dashboard() {
             <Icon name="target" size={24} />
           </div>
           <div className="stat-content">
-            <h3 className="stat-value">{stats.favoriteExercise}</h3>
+            <h3 className="stat-value stat-value-long">{stats.favoriteExercise}</h3>
             <p className="stat-label">Favorite Exercise</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon">
+            <Icon name="bookmark" size={24} />
+          </div>
+          <div className="stat-content">
+            <h3 className="stat-value stat-value-long">{stats.favoriteWorkout}</h3>
+            <p className="stat-label">Favorite Workout</p>
           </div>
         </div>
       </div>
@@ -464,10 +475,14 @@ export function Dashboard() {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value: any, name: any, props: any) => [
-                    `${props.payload.name}: ${value} times`,
-                    'Count'
-                  ]}
+                  formatter={(value: any, name: any, props: any) => {
+                    const total = exerciseData.reduce((sum, item) => sum + item.count, 0)
+                    const percentage = ((value / total) * 100).toFixed(1)
+                    return [
+                      `${props.payload.name}: ${value} times (${percentage}%)`,
+                      'Count'
+                    ]
+                  }}
                 />
                 <Legend 
                   verticalAlign="bottom" 
@@ -509,10 +524,14 @@ export function Dashboard() {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value: any, name: any, props: any) => [
-                    `${props.payload.name}: ${value} times`,
-                    'Count'
-                  ]}
+                  formatter={(value: any, name: any, props: any) => {
+                    const total = workoutData.reduce((sum, item) => sum + item.count, 0)
+                    const percentage = ((value / total) * 100).toFixed(1)
+                    return [
+                      `${props.payload.name}: ${value} times (${percentage}%)`,
+                      'Count'
+                    ]
+                  }}
                 />
                 <Legend 
                   verticalAlign="bottom" 
