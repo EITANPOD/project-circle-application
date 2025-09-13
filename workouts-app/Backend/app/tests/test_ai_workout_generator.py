@@ -22,9 +22,10 @@ class TestAIWorkoutGenerator:
         """Test AIWorkoutRequest with default values"""
         request = AIWorkoutRequest(user_request="Test workout")
         
-        assert request.workout_type is None
-        assert request.duration_minutes == 45
+        assert request.workout_type == "full_body"
+        assert request.duration_minutes == 30
         assert request.difficulty_level == "intermediate"
+        assert request.num_exercises is None
     
     @patch('app.ai_workout_generator.Groq')
     def test_ai_workout_generator_init(self, mock_groq):
@@ -68,7 +69,7 @@ class TestAIWorkoutGenerator:
     
     @patch('app.ai_workout_generator.Groq')
     def test_build_prompt(self, mock_groq):
-        """Test prompt building"""
+        """Test prompt building with structured parameters"""
         mock_client = Mock()
         mock_groq.return_value = mock_client
         
@@ -82,8 +83,43 @@ class TestAIWorkoutGenerator:
         
         prompt = generator._build_prompt(request)
         
-        assert "I want a cardio workout" in prompt
+        # Test structured parameters are in the prompt
         assert "cardio" in prompt
         assert "20" in prompt
         assert "advanced" in prompt
         assert "JSON" in prompt
+        assert "Create a workout plan with the following specifications" in prompt
+        assert "Number of exercises" in prompt
+        assert "Duration" in prompt
+        assert "Workout type" in prompt
+        assert "Difficulty level" in prompt
+    
+    @patch('app.ai_workout_generator.Groq')
+    def test_build_prompt_structured_only(self, mock_groq):
+        """Test prompt building with only structured parameters (no user_request)"""
+        mock_client = Mock()
+        mock_groq.return_value = mock_client
+        
+        generator = AIWorkoutGenerator()
+        request = AIWorkoutRequest(
+            num_exercises=5,
+            workout_type="upper_body",
+            duration_minutes=30,
+            difficulty_level="beginner",
+            custom_notes="Focus on form"
+        )
+        
+        prompt = generator._build_prompt(request)
+        
+        # Test structured parameters are in the prompt
+        assert "5" in prompt  # num_exercises
+        assert "upper_body" in prompt
+        assert "30" in prompt
+        assert "beginner" in prompt
+        assert "Focus on form" in prompt
+        assert "Create a workout plan with the following specifications" in prompt
+        assert "Number of exercises: 5" in prompt
+        assert "Duration: 30 minutes" in prompt
+        assert "Workout type: upper_body" in prompt
+        assert "Difficulty level: beginner" in prompt
+        assert "Additional notes: Focus on form" in prompt
