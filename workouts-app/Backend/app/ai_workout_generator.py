@@ -5,12 +5,17 @@ from groq import Groq
 from pydantic import BaseModel
 
 class AIWorkoutRequest(BaseModel):
-    user_request: str
-    workout_type: Optional[str] = None
-    duration_minutes: Optional[int] = 45
-    difficulty_level: Optional[str] = "intermediate"
+    # New structured approach
+    num_exercises: Optional[int] = None  # 1-12, None means "let AI decide"
+    duration_minutes: int = 30
+    workout_type: str = "full_body"  # full_body, upper_body, lower_body, core, cardio, strength, flexibility
+    difficulty_level: str = "intermediate"  # beginner, intermediate, advanced
     equipment_available: Optional[List[str]] = None
     focus_areas: Optional[List[str]] = None
+    custom_notes: Optional[str] = None  # Optional additional notes
+    
+    # Keep old field for backward compatibility
+    user_request: Optional[str] = None
 
 class Exercise(BaseModel):
     name: str
@@ -65,26 +70,36 @@ class AIWorkoutGenerator:
             raise Exception(f"Failed to generate workout: {str(e)}")
     
     def _build_prompt(self, request: AIWorkoutRequest) -> str:
-        """Build the prompt for Groq AI based on user request"""
+        """Build the prompt for Groq AI based on structured parameters"""
         
-        prompt_parts = [
-            f"Create a workout plan based on this request: '{request.user_request}'"
-        ]
+        # Use structured approach if available, fallback to user_request for backward compatibility
+        if request.user_request and not any([request.num_exercises, request.workout_type != "full_body", request.difficulty_level != "intermediate"]):
+            # Legacy mode - use user_request
+            prompt_parts = [f"Create a workout plan based on this request: '{request.user_request}'"]
+        else:
+            # New structured mode
+            prompt_parts = ["Create a workout plan with the following specifications:"]
         
-        if request.workout_type:
-            prompt_parts.append(f"Workout type: {request.workout_type}")
+        # Add structured parameters
+        if request.num_exercises:
+            prompt_parts.append(f"Number of exercises: {request.num_exercises}")
+        else:
+            prompt_parts.append("Number of exercises: Let AI decide (4-8 exercises)")
         
-        if request.duration_minutes:
-            prompt_parts.append(f"Duration: {request.duration_minutes} minutes")
-        
-        if request.difficulty_level:
-            prompt_parts.append(f"Difficulty: {request.difficulty_level}")
+        prompt_parts.append(f"Duration: {request.duration_minutes} minutes")
+        prompt_parts.append(f"Workout type: {request.workout_type}")
+        prompt_parts.append(f"Difficulty level: {request.difficulty_level}")
         
         if request.equipment_available:
             prompt_parts.append(f"Available equipment: {', '.join(request.equipment_available)}")
+        else:
+            prompt_parts.append("Available equipment: Bodyweight only")
         
         if request.focus_areas:
             prompt_parts.append(f"Focus areas: {', '.join(request.focus_areas)}")
+        
+        if request.custom_notes:
+            prompt_parts.append(f"Additional notes: {request.custom_notes}")
         
         prompt_parts.extend([
             "",

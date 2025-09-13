@@ -12,6 +12,7 @@ import { ExerciseLibrary } from './pages/ExerciseLibrary'
 import { WorkoutHistory } from './pages/WorkoutHistory'
 import { AuthProvider } from './contexts/AuthContext'
 import { Navigation } from './components/Navigation'
+import { NotificationProvider } from './contexts/NotificationContext'
 
 function App() {
   ;(window as any).__API_BASE__ = (import.meta as any).env?.VITE_API_BASE || ''
@@ -19,23 +20,25 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="app">
-          <Navigation />
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/workouts" element={<Workouts />} />
-                    <Route path="/workouts/:id" element={<WorkoutDetail />} />
-                    <Route path="/history" element={<WorkoutHistory />} />
-                    <Route path="/templates" element={<WorkoutTemplates />} />
-                    <Route path="/exercises" element={<ExerciseLibrary />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </main>
-        </div>
+        <NotificationProvider>
+          <div className="app">
+            <Navigation />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/workouts" element={<Workouts />} />
+                      <Route path="/workouts/:id" element={<WorkoutDetail />} />
+                      <Route path="/history" element={<WorkoutHistory />} />
+                      <Route path="/templates" element={<WorkoutTemplates />} />
+                      <Route path="/exercises" element={<ExerciseLibrary />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </main>
+          </div>
+        </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   )

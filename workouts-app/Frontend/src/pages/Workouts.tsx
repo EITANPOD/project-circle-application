@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useNotification } from '../contexts/NotificationContext'
 import { Icon } from '../components/Icon'
 
 type Workout = { 
@@ -38,6 +39,7 @@ type ExerciseLog = {
 export function Workouts() {
   const nav = useNavigate()
   const { user, isLoading: authLoading } = useAuth()
+  const { showSuccess, showError, showWarning } = useNotification()
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null)
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([])
@@ -72,12 +74,13 @@ export function Workouts() {
   // AI Workout Generation states
   const [showAIModal, setShowAIModal] = useState(false)
   const [aiRequest, setAiRequest] = useState({
-    user_request: '',
-    workout_type: '',
-    duration_minutes: 45,
+    num_exercises: null as number | null,
+    duration_minutes: 30,
+    workout_type: 'full_body',
     difficulty_level: 'intermediate',
     equipment_available: [] as string[],
-    focus_areas: [] as string[]
+    focus_areas: [] as string[],
+    custom_notes: ''
   })
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [aiGeneratedWorkout, setAiGeneratedWorkout] = useState<any>(null)
@@ -202,14 +205,14 @@ export function Workouts() {
         setTitle(''); 
         setNotes('')
         await loadWorkouts()
-        alert('Workout created successfully!')
+        showSuccess('Workout Created', 'Your workout has been created successfully!')
       } else {
         console.error('Failed to create workout:', res.status)
-        alert('Failed to create workout. Please try again.')
+        showError('Creation Failed', 'Failed to create workout. Please try again.')
       }
     } catch (error) {
       console.error('Error creating workout:', error)
-      alert('Error creating workout. Please try again.')
+      showError('Error', 'Error creating workout. Please try again.')
     }
   }
 
@@ -235,12 +238,13 @@ export function Workouts() {
         }
         setShowDeleteConfirm(false)
         setWorkoutToDelete(null)
+        showSuccess('Workout Deleted', 'The workout has been deleted successfully.')
       } else {
-        alert('Failed to delete workout. Please try again.')
+        showError('Deletion Failed', 'Failed to delete workout. Please try again.')
       }
     } catch (error) {
       console.error('Error deleting workout:', error)
-      alert('Error deleting workout. Please try again.')
+      showError('Error', 'Error deleting workout. Please try again.')
     }
   }
 
@@ -267,14 +271,14 @@ export function Workouts() {
         })
         setShowExerciseForm(false)
         await loadExercises(selectedWorkout.id)
-        alert('Exercise added successfully!')
+        showSuccess('Exercise Added', 'Exercise has been added successfully!')
       } else {
         console.error('Failed to add exercise:', res.status)
-        alert('Failed to add exercise. Please try again.')
+        showError('Addition Failed', 'Failed to add exercise. Please try again.')
       }
     } catch (error) {
       console.error('Error adding exercise:', error)
-      alert('Error adding exercise. Please try again.')
+      showError('Error', 'Error adding exercise. Please try again.')
     }
   }
 
@@ -296,7 +300,7 @@ export function Workouts() {
     try {
       // Validate that we have exercise logs to submit
       if (!loggingForm.exercise_logs || loggingForm.exercise_logs.length === 0) {
-        alert('No exercise data to log. Please make sure exercises are loaded and try again.')
+        showWarning('No Data', 'No exercise data to log. Please make sure exercises are loaded and try again.')
         return
       }
       
@@ -318,13 +322,13 @@ export function Workouts() {
         setIsRefreshingLogs(false)
         
         // Show success message
-        alert('Workout logged successfully!')
+        showSuccess('Workout Logged', 'Your workout has been logged successfully!')
       } else {
-        alert('Failed to log workout. Please try again.')
+        showError('Logging Failed', 'Failed to log workout. Please try again.')
       }
     } catch (error) {
       console.error('Error logging workout:', error)
-      alert('Error logging workout. Please try again.')
+      showError('Error', 'Error logging workout. Please try again.')
     }
   }
 
@@ -413,7 +417,7 @@ export function Workouts() {
         // Recursively call this function now that exercises are loaded
         return initializeLoggingForm()
       } else {
-        alert('No exercises found for this workout. Please add exercises first.')
+        showWarning('No Exercises', 'No exercises found for this workout. Please add exercises first.')
         return
       }
     }
@@ -433,11 +437,7 @@ export function Workouts() {
   }
 
   async function generateAIWorkout() {
-    if (!aiRequest.user_request.trim()) {
-      alert('Please describe what kind of workout you want!')
-      return
-    }
-    
+    // No need to check for user_request anymore - structured form always has valid data
     setIsGeneratingAI(true)
     try {
       const base = (window as any).__API_BASE__ || ''
@@ -454,22 +454,19 @@ export function Workouts() {
         setShowAIModal(false)
       } else {
         console.error('Failed to generate AI workout:', res.status)
-        alert('Failed to generate workout. Please try again.')
+        const errorData = await res.json()
+        showError('Generation Failed', errorData.detail || 'Failed to generate workout. Please try again.')
       }
     } catch (error) {
       console.error('Error generating AI workout:', error)
-      alert('Error generating workout. Please try again.')
+      showError('Error', 'Error generating workout. Please try again.')
     } finally {
       setIsGeneratingAI(false)
     }
   }
 
   async function saveAIWorkout() {
-    if (!aiRequest.user_request.trim()) {
-      alert('Please describe what kind of workout you want!')
-      return
-    }
-    
+    // No need to check for user_request anymore - structured form always has valid data
     setIsGeneratingAI(true)
     try {
       const base = (window as any).__API_BASE__ || ''
@@ -484,22 +481,24 @@ export function Workouts() {
         const result = await res.json()
         setShowAIModal(false)
         setAiRequest({
-          user_request: '',
-          workout_type: '',
-          duration_minutes: 45,
+          num_exercises: null,
+          duration_minutes: 30,
+          workout_type: 'full_body',
           difficulty_level: 'intermediate',
           equipment_available: [],
-          focus_areas: []
+          focus_areas: [],
+          custom_notes: ''
         })
         await loadWorkouts()
-        alert('AI workout created successfully!')
+        showSuccess('AI Workout Created', 'Your AI-generated workout has been created successfully!')
       } else {
         console.error('Failed to save AI workout:', res.status)
-        alert('Failed to create workout. Please try again.')
+        const errorData = await res.json()
+        showError('Creation Failed', errorData.detail || 'Failed to create workout. Please try again.')
       }
     } catch (error) {
       console.error('Error saving AI workout:', error)
-      alert('Error creating workout. Please try again.')
+      showError('Error', 'Error creating workout. Please try again.')
     } finally {
       setIsGeneratingAI(false)
     }
@@ -997,45 +996,52 @@ export function Workouts() {
             </div>
             
             <div className="ai-modal-content">
-              <div className="form-group">
-                <label className="form-label">Describe your ideal workout</label>
-                <textarea
-                  className="form-input ai-textarea"
-                  placeholder="e.g., 'I want a 30-minute upper body workout for beginners with no equipment'"
-                  value={aiRequest.user_request}
-                  onChange={e => setAiRequest(prev => ({ ...prev, user_request: e.target.value }))}
-                  rows={3}
-                />
-              </div>
-              
-              <div className="ai-options">
+              <div className="ai-form-grid">
                 <div className="form-group">
-                  <label className="form-label">Workout Type (optional)</label>
+                  <label className="form-label">Number of Exercises</label>
                   <select
                     className="form-input"
-                    value={aiRequest.workout_type}
-                    onChange={e => setAiRequest(prev => ({ ...prev, workout_type: e.target.value }))}
+                    value={aiRequest.num_exercises || ''}
+                    onChange={e => setAiRequest(prev => ({ ...prev, num_exercises: e.target.value ? parseInt(e.target.value) : null }))}
                   >
-                    <option value="">Any type</option>
-                    <option value="strength">Strength Training</option>
-                    <option value="cardio">Cardio</option>
-                    <option value="hiit">HIIT</option>
-                    <option value="yoga">Yoga</option>
-                    <option value="pilates">Pilates</option>
-                    <option value="flexibility">Flexibility</option>
+                    <option value="">Let AI decide (4-8 exercises)</option>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
+                      <option key={num} value={num}>{num} exercise{num !== 1 ? 's' : ''}</option>
+                    ))}
                   </select>
                 </div>
                 
                 <div className="form-group">
                   <label className="form-label">Duration (minutes)</label>
-                  <input
+                  <select
                     className="form-input"
-                    type="number"
-                    min="10"
-                    max="120"
                     value={aiRequest.duration_minutes}
-                    onChange={e => setAiRequest(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) || 45 }))}
-                  />
+                    onChange={e => setAiRequest(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) }))}
+                  >
+                    <option value={15}>15 minutes</option>
+                    <option value={20}>20 minutes</option>
+                    <option value={30}>30 minutes</option>
+                    <option value={45}>45 minutes</option>
+                    <option value={60}>60 minutes</option>
+                    <option value={90}>90 minutes</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label className="form-label">Workout Type</label>
+                  <select
+                    className="form-input"
+                    value={aiRequest.workout_type}
+                    onChange={e => setAiRequest(prev => ({ ...prev, workout_type: e.target.value }))}
+                  >
+                    <option value="full_body">Full Body</option>
+                    <option value="upper_body">Upper Body</option>
+                    <option value="lower_body">Lower Body</option>
+                    <option value="core">Core</option>
+                    <option value="cardio">Cardio</option>
+                    <option value="strength">Strength Training</option>
+                    <option value="flexibility">Flexibility</option>
+                  </select>
                 </div>
                 
                 <div className="form-group">
@@ -1050,6 +1056,17 @@ export function Workouts() {
                     <option value="advanced">Advanced</option>
                   </select>
                 </div>
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">Additional Notes (optional)</label>
+                <textarea
+                  className="form-input ai-textarea"
+                  placeholder="e.g., 'Focus on form', 'I have a knee injury', 'Include stretching'"
+                  value={aiRequest.custom_notes}
+                  onChange={e => setAiRequest(prev => ({ ...prev, custom_notes: e.target.value }))}
+                  rows={2}
+                />
               </div>
               
               <div className="ai-modal-actions">
