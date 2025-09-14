@@ -7,6 +7,7 @@ export interface NotificationData {
   title: string
   message: string
   duration?: number
+  isExiting?: boolean
 }
 
 export function useNotifications() {
@@ -32,7 +33,19 @@ export function useNotifications() {
   }, [])
 
   const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id))
+    // First, mark the notification as exiting to trigger the animation
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === id 
+          ? { ...notification, isExiting: true }
+          : notification
+      )
+    )
+    
+    // Then remove it after the animation completes
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(notification => notification.id !== id))
+    }, 600) // Match the animation duration
   }, [])
 
   const clearAll = useCallback(() => {
